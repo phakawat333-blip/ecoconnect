@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoConnect by Kru Phakawat</title>
+    <style>
+        :root { --primary: #c2185b; --bg: #fce4ec; --toxin: #d32f2f; --energy: #1976d2; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: var(--bg); overflow: hidden; user-select: none; }
+        
+        /* App Header */
+        .app-header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 20; }
+        .app-header h1 { margin: 0; font-size: 1.4em; }
+        .app-header .creator { font-size: 0.9em; font-weight: bold; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; }
+
+        .main-container { display: flex; flex-grow: 1; overflow: hidden; }
+
+        /* Sidebar */
+        #sidebar { width: 320px; background: white; border-right: 2px solid #ddd; display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .sidebar-header { padding: 15px; background: #eee; text-align: center; border-bottom: 1px solid #ccc; }
+        #biome-select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #aaa; font-family: inherit; font-size: 0.95em; outline: none; cursor: pointer; color: #333; font-weight: bold; }
+        #organism-list { flex-grow: 1; overflow-y: auto; padding: 15px; }
+        
+        .organism-item { 
+            padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; 
+            cursor: grab; background: #fff; display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.2s;
+        }
+        .organism-item:hover { border-color: var(--primary); background: #f8bbd0; transform: translateY(-2px); }
+        .organism-item:active { cursor: grabbing; }
+        
+        .type-tag { font-size: 0.75em; padding: 3px 6px; border-radius: 4px; color: white; font-weight: bold; }
+        .tag-p { background: #4caf50; } 
+        .tag-c { background: #ff9800; } 
+
+        /* Workspace */
+        #workspace { flex-grow: 1; position: relative; background-image: radial-gradient(#d1d1d1 1px, transparent 1px); background-size: 20px 20px; }
+        .drop-highlight { background-color: #fce4ec !important; }
+        
+        .node { 
+            position: absolute; width: 160px; padding: 12px; background: white; border: 2px solid #444; 
+            border-radius: 10px; font-size: 0.9em; cursor: grab; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: box-shadow 0.2s; z-index: 5;
+        }
+        .node:active { cursor: grabbing; box-shadow: 0 6px 15px rgba(0,0,0,0.2); z-index: 10; }
+        .node .role { font-size: 0.8em; color: #555; text-align: center; margin-bottom: 5px; font-weight: bold; background: #eee; padding: 2px; border-radius: 4px; }
+        .node .name { text-align: center; font-weight: bold; font-size: 1.1em; margin-bottom: 4px; color: #222; }
+        .node .eats-info { font-size: 0.75em; color: #666; text-align: center; font-style: italic; margin-bottom: 8px; line-height: 1.2; }
+        
+        .node .data-line { display: flex; justify-content: space-between; margin-top: 4px; font-size: 0.9em; border-top: 1px dashed #ccc; padding-top: 4px; }
+        .energy-val { color: var(--energy); font-weight: bold; }
+        .toxin-val { color: var(--toxin); font-weight: bold; }
+        .delete-btn { position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold; display: none; }
+        .node:hover .delete-btn { display: block; }
+
+        /* SVG Connections */
+        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .link-line { stroke: #666; stroke-width: 2.5; marker-end: url(#arrowhead); }
+
+        .control-panel { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; z-index: 20; }
+        button { padding: 10px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-family: inherit; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; }
+        button:hover { transform: translateY(-2px); }
+        .btn-export { background: #1976d2; color: white; }
+        .btn-reset { background: #d32f2f; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <h1>🌱 EcoConnect </h1>
+    <div class="creator">ผู้ผลิตสื่อ: ครูภควัต สองเมือง</div>
+</div>
+
+<div class="main-container">
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <select id="biome-select" onchange="filterBiome(this.value)">
+                <option value="red_lotus">🌸 ระบบนิเวศทะเลบัวแดง อุดรธานี</option>
+                <option value="all">🌍 แสดงทั้งหมด (30+ ชนิด)</option>
+                <option value="forest">🌳 ระบบนิเวศป่าไม้ / ทุ่งหญ้า</option>
+                <option value="freshwater">🏞️ ระบบนิเวศแหล่งน้ำจืดทั่วไป</option>
+                <option value="marine">🌊 ระบบนิเวศทางทะเล</option>
+            </select>
+        </div>
+        <div id="organism-list"></div>
+    </div>
+
+    <div id="workspace">
+        <svg id="svg-canvas">
+            <defs>
+                <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="25" refY="3" orientation="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#666" />
+                </marker>
+            </defs>
+        </svg>
+        <div class="control-panel">
+            <button class="btn-export" onclick="exportCSV()">ดาวน์โหลดข้อมูล (CSV)</button>
+            <button class="btn-reset" onclick="resetBoard(true)">ล้างกระดาน</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ORGANISMS = [
+        // ทะเลบัวแดง อุดรธานี (Red Lotus Sea)
+        { id: 'red_lotus', name: 'บัวแดง', type: 'P', eats: [], biomes: ['red_lotus'] },
+        { id: 'algae', name: 'สาหร่าย/จอกแหน', type: 'P', eats: [], biomes: ['freshwater', 'red_lotus'] },
+        { id: 'fw_phytoplankton', name: 'แพลงก์ตอนพืช', type: 'P', eats: [], biomes: ['freshwater', 'red_lotus'] },
+        { id: 'water_insect', name: 'แมลงน้ำ/เพลี้ย', type: 'C', eats: ['red_lotus', 'algae'], biomes: ['red_lotus', 'freshwater'] },
+        { id: 'apple_snail', name: 'หอยเชอรี่/หอยขม', type: 'C', eats: ['red_lotus', 'algae', 'grass'], biomes: ['red_lotus', 'freshwater'] },
+        { id: 'fw_zooplankton', name: 'แพลงก์ตอนสัตว์', type: 'C', eats: ['fw_phytoplankton', 'algae'], biomes: ['freshwater', 'red_lotus'] },
+        { id: 'minnow', name: 'ปลาซิว', type: 'C', eats: ['water_insect', 'fw_zooplankton'], biomes: ['red_lotus', 'freshwater'] },
+        { id: 'frog', name: 'กบ/เขียด', type: 'C', eats: ['water_insect', 'grasshopper'], biomes: ['forest', 'freshwater', 'red_lotus'] },
+        { id: 'large_fish', name: 'ปลาช่อน', type: 'C', eats: ['minnow', 'frog', 'apple_snail'], biomes: ['freshwater', 'red_lotus'] },
+        { id: 'water_fowl', name: 'นกเป็ดน้ำ', type: 'C', eats: ['red_lotus', 'minnow', 'apple_snail', 'water_insect'], biomes: ['red_lotus'] },
+        { id: 'heron', name: 'นกกระยาง', type: 'C', eats: ['minnow', 'frog', 'large_fish', 'snake'], biomes: ['red_lotus', 'freshwater'] },
+        { id: 'snake', name: 'งูน้ำ', type: 'C', eats: ['frog', 'minnow', 'rat'], biomes: ['forest', 'freshwater', 'red_lotus'] },
+
+        // ป่าไม้ / ทุ่งหญ้า (Forest / Grassland)
+        { id: 'grass', name: 'หญ้า', type: 'P', eats: [], biomes: ['forest', 'red_lotus'] },
+        { id: 'corn', name: 'ข้าวโพด', type: 'P', eats: [], biomes: ['forest'] },
+        { id: 'rice', name: 'ข้าว', type: 'P', eats: [], biomes: ['forest'] },
+        { id: 'grasshopper', name: 'ตั๊กแตน', type: 'C', eats: ['grass', 'corn', 'rice'], biomes: ['forest'] },
+        { id: 'rabbit', name: 'กระต่าย', type: 'C', eats: ['grass'], biomes: ['forest'] },
+        { id: 'caterpillar', name: 'หนอนผีเสื้อ', type: 'C', eats: ['corn', 'rice'], biomes: ['forest'] },
+        { id: 'rat', name: 'หนูพุก', type: 'C', eats: ['rice', 'corn', 'grasshopper', 'apple_snail'], biomes: ['forest', 'red_lotus'] },
+        { id: 'bird', name: 'นกกินแมลง', type: 'C', eats: ['caterpillar', 'grasshopper'], biomes: ['forest'] },
+        { id: 'owl', name: 'นกเค้าแมว', type: 'C', eats: ['rat', 'bird', 'snake'], biomes: ['forest'] },
+        { id: 'hawk', name: 'เหยี่ยว', type: 'C', eats: ['snake', 'rabbit', 'bird', 'rat'], biomes: ['forest'] },
+
+        // ทะเล (Marine)
+        { id: 'm_phytoplankton', name: 'แพลงก์ตอนพืชทะเล', type: 'P', eats: [], biomes: ['marine'] },
+        { id: 'seaweed', name: 'สาหร่ายทะเล', type: 'P', eats: [], biomes: ['marine'] },
+        { id: 'krill', name: 'คริลล์ (Krill)', type: 'C', eats: ['m_phytoplankton', 'seaweed'], biomes: ['marine'] },
+        { id: 'sardine', name: 'ปลาซาร์ดีน', type: 'C', eats: ['krill', 'm_phytoplankton'], biomes: ['marine'] },
+        { id: 'squid', name: 'หมึกกล้วย', type: 'C', eats: ['sardine', 'krill'], biomes: ['marine'] },
+        { id: 'tuna', name: 'ปลาทูน่า', type: 'C', eats: ['sardine', 'squid'], biomes: ['marine'] },
+        { id: 'shark', name: 'ฉลาม', type: 'C', eats: ['tuna', 'squid', 'sardine'], biomes: ['marine'] },
+
+        // มนุษย์
+        { id: 'human', name: 'มนุษย์', type: 'C', eats: ['rice', 'large_fish', 'rabbit', 'tuna', 'apple_snail', 'red_lotus'], biomes: ['forest', 'freshwater', 'marine', 'red_lotus'] }
+    ];
+
+    const listContainer = document.getElementById('organism-list');
+    const workspace = document.getElementById('workspace');
+    const svg = document.getElementById('svg-canvas');
+    let activeNodes = [];
+
+    function renderSidebar(biomeFilter) {
+        listContainer.innerHTML = ''; 
+        const filteredOrgs = biomeFilter === 'all' 
+            ? ORGANISMS 
+            : ORGANISMS.filter(org => org.biomes.includes(biomeFilter));
+
+        filteredOrgs.forEach(org => {
+            const div = document.createElement('div');
+            div.className = 'organism-item';
+            div.draggable = true;
+            div.innerHTML = `<span>${org.name}</span> <span class="type-tag ${org.type === 'P' ? 'tag-p' : 'tag-c'}">${org.type === 'P' ? 'ผู้ผลิต' : 'ผู้บริโภค'}</span>`;
+            
+            div.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', org.id);
+                e.dataTransfer.effectAllowed = 'copy';
+            });
+            listContainer.appendChild(div);
+        });
+    }
+
+    function filterBiome(biome) {
+        renderSidebar(biome);
+    }
+
+    // เริ่มต้นหน้าเว็บด้วยระบบนิเวศทะเลบัวแดง
+    renderSidebar('red_lotus');
+
+    workspace.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        workspace.classList.add('drop-highlight');
+    });
+
+    workspace.addEventListener('dragleave', () => {
+        workspace.classList.remove('drop-highlight');
+    });
+
+    workspace.addEventListener('drop', (e) => {
+        e.preventDefault();
+        workspace.classList.remove('drop-highlight');
+        
+        const orgId = e.dataTransfer.getData('text/plain');
+        if (!orgId) return;
+
+        const orgData = ORGANISMS.find(o => o.id === orgId);
+        if (orgData) {
+            const rect = workspace.getBoundingClientRect();
+            const x = e.clientX - rect.left - 80;
+            const y = e.clientY - rect.top - 60;
+            createNode(x, y, orgData);
+        }
+    });
+
+    function createNode(x, y, data) {
+        const nodeId = 'node-' + Date.now() + Math.floor(Math.random() * 1000);
+        const nodeEl = document.createElement('div');
+        nodeEl.className = 'node';
+        nodeEl.id = nodeId;
+        nodeEl.style.left = x + 'px';
+        nodeEl.style.top = y + 'px';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerText = 'X';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            nodeEl.remove();
+            activeNodes = activeNodes.filter(n => n.nodeId !== nodeId);
+            updateSystem();
+        };
+        nodeEl.appendChild(deleteBtn);
+        workspace.appendChild(nodeEl);
+
+        activeNodes.push({
+            nodeId: nodeId,
+            orgId: data.id,
+            name: data.name,
+            type: data.type,
+            eats: data.eats,
+            energy: 0,
+            toxin: 0,
+            level: 0
+        });
+
+        makeNodeDraggable(nodeEl, nodeId);
+        updateSystem();
+    }
+
+    function makeNodeDraggable(el, nodeId) {
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        el.addEventListener('mousedown', (e) => {
+            if(e.target.className === 'delete-btn') return;
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            initialLeft = el.offsetLeft;
+            initialTop = el.offsetTop;
+            el.style.zIndex = 1000;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            el.style.left = (initialLeft + dx) + 'px';
+            el.style.top = (initialTop + dy) + 'px';
+            updateSystem();
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                el.style.zIndex = 5;
+            }
+        });
+    }
+
+    function updateSystem() {
+        svg.innerHTML = '<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="25" refY="3" orientation="auto"><polygon points="0 0, 8 3, 0 6" fill="#666" /></marker></defs>';
+
+        activeNodes.forEach(n => {
+            if (n.type === 'P') {
+                n.energy = 10000;
+                n.toxin = 0.01;
+                n.level = 1;
+            } else {
+                n.energy = 0;
+                n.toxin = 0;
+                n.level = 0;
+            }
+        });
+
+        for (let step = 0; step < 5; step++) {
+            activeNodes.forEach(target => {
+                if (target.type === 'P') return;
+
+                let totalEnergy = 0;
+                let maxPreyToxin = 0;
+                let maxPreyLevel = 0;
+
+                activeNodes.forEach(source => {
+                    if (target.eats.includes(source.orgId) && source.energy > 0) {
+                        totalEnergy += source.energy * 0.1;
+                        if (source.toxin > maxPreyToxin) maxPreyToxin = source.toxin;
+                        if (source.level > maxPreyLevel) maxPreyLevel = source.level;
+                    }
+                });
+
+                if (totalEnergy > 0) {
+                    target.energy = totalEnergy;
+                    target.toxin = maxPreyToxin * 10;
+                    target.level = maxPreyLevel + 1;
+                }
+            });
+        }
+
+        activeNodes.forEach(target => {
+            const targetEl = document.getElementById(target.nodeId);
+            if (!targetEl) return;
+
+            activeNodes.forEach(source => {
+                if (target.eats.includes(source.orgId) && source.energy > 0) {
+                    const sourceEl = document.getElementById(source.nodeId);
+                    drawLink(sourceEl, targetEl);
+                }
+            });
+
+            let levelText = target.type === 'P' ? 'ผู้ผลิต (Producer)' : `ผู้บริโภคอันดับ ${target.level - 1 || '?'}`;
+            if (target.type === 'C' && target.energy === 0) levelText = 'ยังขาดแคลนอาหาร';
+
+            // แปลงรหัสอาหารเป็นชื่อภาษาไทย
+            let eatsText = '';
+            if (target.type === 'P') {
+                eatsText = 'สร้างอาหารเอง (สังเคราะห์ด้วยแสง)';
+            } else {
+                const eatsNames = target.eats.map(id => {
+                    const found = ORGANISMS.find(o => o.id === id);
+                    return found ? found.name : '';
+                }).join(', ');
+                eatsText = `อาหาร: ${eatsNames}`;
+            }
+
+            const deleteBtnHtml = `<button class="delete-btn" onclick="event.stopPropagation(); document.getElementById('${target.nodeId}').remove(); activeNodes = activeNodes.filter(n => n.nodeId !== '${target.nodeId}'); updateSystem();">X</button>`;
+
+            targetEl.innerHTML = `
+                ${deleteBtnHtml}
+                <div class="role">${levelText}</div>
+                <div class="name">${target.name}</div>
+                <div class="eats-info">${eatsText}</div>
+                <div class="data-line"><span>Energy:</span><span class="energy-val">${target.energy > 0 ? target.energy.toLocaleString(undefined, {maximumFractionDigits: 1}) + ' J' : '0 J'}</span></div>
+                <div class="data-line"><span>Toxin:</span><span class="toxin-val">${target.toxin > 0 ? target.toxin.toLocaleString(undefined, {maximumFractionDigits: 2}) + ' ppm' : '0 ppm'}</span></div>
+            `;
+        });
+    }
+
+    function drawLink(sourceEl, targetEl) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'link-line');
+        line.setAttribute('x1', sourceEl.offsetLeft + sourceEl.offsetWidth / 2);
+        line.setAttribute('y1', sourceEl.offsetTop + sourceEl.offsetHeight / 2);
+        line.setAttribute('x2', targetEl.offsetLeft + targetEl.offsetWidth / 2);
+        line.setAttribute('y2', targetEl.offsetTop + targetEl.offsetHeight / 2);
+        svg.appendChild(line);
+    }
+
+    function resetBoard(askConfirm) {
+        if (askConfirm && !confirm("ต้องการล้างกระดานทั้งหมดใช่หรือไม่?")) return;
+        document.querySelectorAll('.node').forEach(node => node.remove());
+        activeNodes = [];
+        updateSystem();
+    }
+
+    function exportCSV() {
+        if (activeNodes.length === 0) {
+            alert("กรุณาสร้างสายใยอาหารก่อนดาวน์โหลดข้อมูลครับ");
+            return;
+        }
+        let csv = "Name,Role,TrophicLevel,Energy(J),Toxin(ppm)\n";
+        activeNodes.forEach(n => {
+            let role = n.type === 'P' ? 'Producer' : 'Consumer';
+            csv += `${n.name},${role},${n.level},${n.energy},${n.toxin}\n`;
+        });
+        
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ecoconnect_data.csv';
+        a.click();
+    }
+</script>
+
+</body>
+</html>
