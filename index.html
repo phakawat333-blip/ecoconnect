@@ -11,7 +11,9 @@
         /* App Header */
         .app-header { background: var(--primary); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 20; }
         .app-header h1 { margin: 0; font-size: 1.2em; }
-        .app-header .creator { font-size: 0.8em; font-weight: bold; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; }
+        .app-header .creator-info { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.8em; }
+        .app-header .creator { font-weight: bold; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; margin-bottom: 2px; }
+        .app-header .email { opacity: 0.8; font-size: 0.9em; padding-right: 10px; }
 
         .main-container { display: flex; flex-grow: 1; overflow: hidden; position: relative; }
 
@@ -35,7 +37,7 @@
         /* Workspace */
         #workspace { flex-grow: 1; position: relative; background-image: radial-gradient(#d1d1d1 1px, transparent 1px); background-size: 20px 20px; overflow: hidden; touch-action: none; }
         
-        /* Node Card - ลากได้ทั้งกล่อง */
+        /* Node Card */
         .node { 
             position: absolute; width: 190px; background: white; border: 2px solid #444; 
             border-radius: 12px; font-size: 0.85em; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
@@ -54,7 +56,7 @@
         .node .name { text-align: center; font-weight: bold; font-size: 1.1em; margin-bottom: 4px; color: #222; }
         .node .eats-info { font-size: 0.7em; color: #666; text-align: center; font-style: italic; margin-bottom: 8px; line-height: 1.2; height: 2.4em; overflow: hidden; }
         
-        /* 🚨 ปรับปรุง Population Controls 🚨 */
+        /* Population Controls */
         .pop-control { display: flex; justify-content: space-between; align-items: center; background: #e8f5e9; border-radius: 6px; padding: 6px; margin-bottom: 8px; border: 1px solid #c8e6c9; pointer-events: auto; }
         .pop-btn-group { display: flex; gap: 3px; }
         .pop-btn { background: #4caf50; color: white; border: none; border-radius: 4px; height: 24px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; padding: 0 5px; }
@@ -68,12 +70,14 @@
 
         /* SVG Connections */
         svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-        .link-line { stroke: #666; stroke-width: 2.5; marker-end: url(#arrowhead); transition: stroke-width 0.3s; }
+        .link-line { stroke: #555; stroke-width: 3; marker-end: url(#arrowhead); transition: stroke-width 0.3s; }
 
         .control-panel { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 10px; z-index: 20; }
         button.action-btn { padding: 10px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-family: inherit; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; font-size: 0.9em; }
         .btn-reset { background: #d32f2f; color: white; }
         .btn-reset:hover { background: #b71c1c; }
+        .btn-export { background: #1976d2; color: white; }
+        .btn-export:hover { background: #115293; }
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
@@ -90,7 +94,10 @@
 
 <div class="app-header">
     <h1>🌱 EcoConnect</h1>
-    <div class="creator">โดย ครูภควัต สองเมือง</div>
+    <div class="creator-info">
+        <div class="creator">โดย ครูภควัต สองเมือง</div>
+        <div class="email">phakawat333@gmail.com</div>
+    </div>
 </div>
 
 <div class="main-container">
@@ -111,12 +118,13 @@
     <div id="workspace">
         <svg id="svg-canvas">
             <defs>
-                <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="22" refY="3" orientation="auto">
-                    <polygon points="0 0, 8 3, 0 6" fill="#666" />
+                <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" fill="#555">
+                    <polygon points="0 0, 10 4, 0 8" />
                 </marker>
             </defs>
         </svg>
         <div class="control-panel">
+            <button class="action-btn btn-export" onclick="exportCSV()">ดาวน์โหลดข้อมูล</button>
             <button class="action-btn btn-reset" onclick="resetBoard(true)">ล้างกระดาน</button>
         </div>
     </div>
@@ -145,7 +153,8 @@
         { id: 'grasshopper', name: 'ตั๊กแตน', type: 'C', eats: ['grass', 'corn', 'rice'], biomes: ['forest'] },
         { id: 'rabbit', name: 'กระต่าย', type: 'C', eats: ['grass'], biomes: ['forest'] },
         { id: 'rat', name: 'หนูพุก', type: 'C', eats: ['rice', 'corn', 'grasshopper', 'apple_snail'], biomes: ['forest', 'red_lotus'] },
-        { id: 'hawk', name: 'เหยี่ยว', type: 'C', eats: ['snake', 'rabbit', 'rat'], biomes: ['forest'] },
+        { id: 'hawk', name: 'เหยี่ยว', type: 'C', eats: ['snake', 'rabbit', 'rat', 'bird'], biomes: ['forest'] },
+        { id: 'bird', name: 'นกกินแมลง', type: 'C', eats: ['grasshopper'], biomes: ['forest'] },
 
         // ทะเล
         { id: 'm_phytoplankton', name: 'แพลงก์ตอนพืชทะเล', type: 'P', eats: [], biomes: ['marine'] },
@@ -174,7 +183,7 @@
             
             div.onclick = () => {
                 const rect = workspace.getBoundingClientRect();
-                const x = (rect.width / 2) - 90 + (Math.random() * 40 - 20);
+                const x = (rect.width / 2) - 95 + (Math.random() * 40 - 20);
                 const y = (rect.height / 2) - 80 + (Math.random() * 40 - 20);
                 createNode(x, y, org);
             };
@@ -195,7 +204,7 @@
 
         activeNodes.push({
             nodeId: nodeId, orgId: data.id, name: data.name, type: data.type,
-            eats: data.eats, population: 100, energy: 0, toxin: 0, level: 0
+            eats: data.eats, population: 100, energy: 0, toxin: 0, levels: new Set()
         });
 
         renderNodeContent(nodeEl, nodeId);
@@ -209,13 +218,20 @@
         const data = activeNodes.find(n => n.nodeId === nodeId);
         if(!data) return;
 
-        let levelText = data.type === 'P' ? 'ผู้ผลิต (Producer)' : `ผู้บริโภคอันดับ ${data.level - 1 || '?'}`;
-        if (data.type === 'C' && data.energy === 0) levelText = 'ยังไม่มีอาหาร';
-        if (data.population === 0) levelText = 'สูญพันธุ์ (Extinct)'; // แจ้งเตือนเมื่อเหลือ 0
+        // 🚨 ส่วนที่แสดงผลระดับผู้บริโภคหลายระดับพร้อมกัน 🚨
+        let levelText = 'ยังไม่มีอาหาร';
+        if (data.type === 'P') {
+            levelText = 'ผู้ผลิต (Producer)';
+        } else if (data.levels && data.levels.size > 0) {
+            // ดึงค่าทุกระดับ ลบ 1 ออกมา (ให้กลายเป็นอันดับผู้บริโภค) และเรียงลำดับจากน้อยไปมาก
+            const consumerLevels = Array.from(data.levels).map(l => l - 1).sort((a, b) => a - b);
+            levelText = `ผู้บริโภคอันดับ ${consumerLevels.join(', ')}`;
+        }
+
+        if (data.population === 0) levelText = 'สูญพันธุ์ (Extinct)'; 
 
         let eatsText = data.type === 'P' ? 'สร้างอาหารเอง' : `อาหาร: ${data.eats.map(id => ORGANISMS.find(o => o.id === id)?.name || '').join(', ')}`;
 
-        // ปุ่มควบคุมประชากรแบบละเอียด
         nodeEl.innerHTML = `
             <button class="delete-btn" onclick="deleteNode('${nodeId}', event)">✕</button>
             <div class="node-content">
@@ -255,8 +271,6 @@
 
         const oldPop = target.population;
         target.population = Math.max(0, target.population + delta);
-        
-        // ป้องกันการหารด้วยศูนย์กรณีเพิ่มจาก 0
         const ratioChange = oldPop === 0 ? (delta > 0 ? 1 : 0) : delta / oldPop;
 
         activeNodes.forEach(other => {
@@ -311,39 +325,44 @@
     }
 
     function updateSystem() {
-        svg.innerHTML = '<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="22" refY="3" orientation="auto"><polygon points="0 0, 8 3, 0 6" fill="#666" /></marker></defs>';
+        svg.innerHTML = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" fill="#555"><polygon points="0 0, 10 4, 0 8" /></marker></defs>';
 
+        // 🚨 Reset ค่าทุกครั้งก่อนคำนวณใหม่ 🚨
         activeNodes.forEach(n => {
             if (n.type === 'P') {
-                n.energy = n.population * 100; // 1 ต้น = 100 J
+                n.energy = n.population * 100;
                 n.toxin = n.population > 0 ? 0.01 : 0;
-                n.level = 1;
+                n.levels = new Set([1]); // ผู้ผลิตอยู่ Level 1 เสมอ
             } else {
-                n.energy = 0; n.toxin = 0; n.level = 0;
+                n.energy = 0; 
+                n.toxin = 0; 
+                n.levels = new Set(); // รีเซ็ตระดับให้เป็นค่าว่างก่อนคำนวณใหม่
             }
         });
 
+        // ลูปคำนวณตามสายใยอาหาร
         for (let step = 0; step < 5; step++) {
             activeNodes.forEach(target => {
                 if (target.type === 'P') return;
 
                 let totalEnergy = 0;
                 let maxPreyToxin = 0;
-                let maxPreyLevel = 0;
+                let newLevels = new Set(target.levels); // เก็บระดับที่คำนวณได้ก่อนหน้านี้ไว้ด้วย
 
                 activeNodes.forEach(source => {
                     if (target.eats.includes(source.orgId) && source.energy > 0) {
                         totalEnergy += source.energy * 0.1;
                         if (source.toxin > maxPreyToxin) maxPreyToxin = source.toxin;
-                        if (source.level > maxPreyLevel) maxPreyLevel = source.level;
+                        
+                        // ถ้าระดับการกินของเหยื่อชัดเจน ให้เอามาบวก 1 เป็นระดับของตัวผู้กิน
+                        source.levels.forEach(lvl => newLevels.add(lvl + 1));
                     }
                 });
 
                 if (totalEnergy > 0 && target.population > 0) {
-                    // อนุญาตให้เก็บทศนิยมได้ แทนที่จะปัดเศษเป็น 0
                     target.energy = totalEnergy * (target.population / 100);
                     target.toxin = maxPreyToxin * 10;
-                    target.level = maxPreyLevel + 1;
+                    target.levels = newLevels; // อัปเดต Array ระดับผู้บริโภคทั้งหมด
                 }
             });
         }
@@ -364,13 +383,50 @@
     }
 
     function drawLink(sourceEl, targetEl) {
+        const sX = sourceEl.offsetLeft + sourceEl.offsetWidth / 2;
+        const sY = sourceEl.offsetTop + sourceEl.offsetHeight / 2;
+        const tX = targetEl.offsetLeft + targetEl.offsetWidth / 2;
+        const tY = targetEl.offsetTop + targetEl.offsetHeight / 2;
+        
+        const tW = targetEl.offsetWidth;
+        const tH = targetEl.offsetHeight;
+        
+        const arrow = calculateIntersection(sX, sY, tX, tY, tW, tH);
+
+        if(!arrow) return;
+
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('class', 'link-line');
-        line.setAttribute('x1', sourceEl.offsetLeft + sourceEl.offsetWidth / 2);
-        line.setAttribute('y1', sourceEl.offsetTop + sourceEl.offsetHeight / 2);
-        line.setAttribute('x2', targetEl.offsetLeft + targetEl.offsetWidth / 2);
-        line.setAttribute('y2', targetEl.offsetTop + targetEl.offsetHeight / 2);
+        line.setAttribute('x1', sX);
+        line.setAttribute('y1', sY);
+        line.setAttribute('x2', arrow.x);
+        line.setAttribute('y2', arrow.y);
         svg.appendChild(line);
+    }
+    
+    function calculateIntersection(sX, sY, tX, tY, tW, tH) {
+        const dx = tX - sX;
+        const dy = tY - sY;
+        
+        if (dx === 0 && dy === 0) return null;
+        
+        const padding = 8;
+        const halfWidth = (tW / 2) + padding;
+        const halfHeight = (tH / 2) + padding;
+        
+        const yRatio = (dy > 0 ? (tY - halfHeight - sY) : (tY + halfHeight - sY)) / dy;
+        const xAtY = sX + yRatio * dx;
+        
+        const xRatio = (dx > 0 ? (tX - halfWidth - sX) : (tX + halfWidth - sX)) / dx;
+        const yAtX = sY + xRatio * dy;
+        
+        if (Math.abs(xAtY - tX) <= halfWidth) {
+             return {x: xAtY, y: sY + yRatio * dy}; 
+        } else if (Math.abs(yAtX - tY) <= halfHeight) {
+             return {x: sX + xRatio * dx, y: yAtX}; 
+        } else {
+             return {x: tX, y: tY}; 
+        }
     }
 
     function resetBoard(askConfirm) {
@@ -378,6 +434,29 @@
         document.querySelectorAll('.node').forEach(node => node.remove());
         activeNodes = [];
         updateSystem();
+    }
+
+    function exportCSV() {
+        if (activeNodes.length === 0) {
+            alert("กรุณาสร้างสายใยอาหารก่อนดาวน์โหลดข้อมูลครับ");
+            return;
+        }
+        let csv = "Name,Role,ConsumerLevels,Population,Energy(J),Toxin(ppm)\n";
+        activeNodes.forEach(n => {
+            let role = n.type === 'P' ? 'Producer' : 'Consumer';
+            // แปลง Set ให้เป็น String ที่มีขีดคั่น (เช่น 1-2-3) เพื่อไม่ให้จุลภาคตีกับไฟล์ CSV
+            let levelsStr = n.type === 'P' ? '0' : Array.from(n.levels).map(l => l - 1).sort((a,b)=>a-b).join('-');
+            if(n.population === 0) levelsStr = 'Extinct';
+            
+            csv += `${n.name},${role},${levelsStr},${n.population},${n.energy.toFixed(2)},${n.toxin.toFixed(4)}\n`;
+        });
+        
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ecoconnect_data.csv';
+        a.click();
     }
 </script>
 
