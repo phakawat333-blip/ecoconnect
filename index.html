@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EcoConnect by Kru Phakawat</title>
-    <!-- ไลบรารีสำหรับสร้าง PDF และ Chart -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -19,105 +18,115 @@
         
         body { 
             margin: 0; display: flex; flex-direction: column; height: 100vh; 
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: #fce4ec; /* พื้นหลังรวมเปลี่ยนเป็นสีอ่อน */
             overflow: hidden; user-select: none; color: #333; touch-action: none;
         }
 
-        /* App Header & Status */
+        /* --- Header & Top Navigation Bar --- */
         .app-header { 
-            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); color: white; 
-            padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 20; border-bottom: 1px solid var(--glass-border);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 30; flex-wrap: wrap; gap: 10px;
         }
-        .app-header h1 { margin: 0; font-size: 1.5em; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .creator-info { text-align: right; line-height: 1.2; }
-        .creator { font-weight: bold; color: var(--accent); font-size: 1.1em; }
-        .school { font-size: 0.8em; opacity: 0.9; }
+        
+        .header-title { display: flex; flex-direction: column; }
+        .app-header h1 { margin: 0; font-size: 1.4em; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .creator-info { font-size: 0.8em; opacity: 0.9; }
 
-        #status-bar {
-            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
-            background: var(--glass-bg); padding: 10px 25px; border-radius: 30px;
-            font-weight: bold; font-size: 1.2em; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 15; border: 2px solid #ccc; transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+        /* Top Toolbar (Filters & Actions) */
+        .top-toolbar {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 8px;
         }
-        .status-chain { border-color: #29b6f6 !important; color: #0277bd; }
-        .status-web { border-color: #ab47bc !important; color: #6a1b9a; }
+        
+        select { padding: 8px 12px; border-radius: 8px; border: none; font-size: 0.9em; outline: none; cursor: pointer; font-weight: bold; background: white; color: var(--primary);}
+        .alien-btn { padding: 8px 15px; background: #6200ea; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9em;}
+        .alien-btn:hover { background: #3700b3; box-shadow: 0 0 10px #6200ea; }
 
+        .action-btn { padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; font-size: 0.9em; display: flex; align-items: center; gap: 5px; }
+        .btn-sim { background: #2962ff; color: white; } .btn-sim:hover { background: #1565c0; }
+        .btn-graph { background: #aa00ff; color: white; } .btn-graph:hover { background: #6a1b9a; }
+        .btn-pyramid { background: #ff9100; color: white; } .btn-pyramid:hover { background: #ff6d00; }
+        .btn-pdf { background: #00c853; color: white; } .btn-pdf:hover { background: #009624; }
+        .btn-reset { background: var(--danger); color: white; } .btn-reset:hover { background: #b71c1c; }
+
+        /* Status & Time Bar (Below Header) */
+        .info-bar {
+            display: flex; justify-content: center; gap: 20px; align-items: center;
+            background: white; padding: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 25; font-size: 0.95em;
+            border-bottom: 1px solid #ddd;
+        }
+        #status-text { font-weight: bold; color: #555; }
+        #time-display { font-weight: bold; color: var(--primary); background: #e3f2fd; padding: 4px 12px; border-radius: 20px;}
+
+        /* --- Main Content Area --- */
         .main-container { display: flex; flex-grow: 1; overflow: hidden; position: relative; }
 
-        /* Sidebar */
+        /* Sidebar (Now only for organisms) */
         #sidebar { 
-            width: 320px; background: var(--glass-bg); backdrop-filter: blur(15px);
-            display: flex; flex-direction: column; z-index: 10; box-shadow: 5px 0 15px rgba(0,0,0,0.1); 
+            width: 280px; background: var(--glass-bg); backdrop-filter: blur(15px);
+            display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05); 
             border-right: 1px solid var(--glass-border);
         }
-        .sidebar-header { padding: 15px; background: rgba(0,0,0,0.05); text-align: center; border-bottom: 1px solid #ddd; }
-        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #aaa; font-size: 1em; outline: none; cursor: pointer; font-weight: bold; }
-        .alien-btn { margin-top: 10px; width: 100%; padding: 10px; background: #6200ea; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .alien-btn:hover { background: #3700b3; box-shadow: 0 0 15px #6200ea; }
-
-        #organism-list { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .sidebar-header { padding: 10px; background: rgba(0,0,0,0.05); text-align: center; border-bottom: 1px solid #ddd; font-weight: bold; color: #555;}
+        
+        #organism-list { flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
         .organism-item { 
-            padding: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; 
+            padding: 10px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; 
             background: white; display: flex; justify-content: space-between; align-items: center;
-            transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 0.9em;
         }
-        .organism-item:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 5px 10px rgba(0,0,0,0.15); }
-        .org-icon { font-size: 1.5em; margin-right: 10px; }
+        .organism-item:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+        .org-icon { font-size: 1.4em; margin-right: 8px; }
         .org-name { flex-grow: 1; font-weight: 600; }
-        .type-tag { font-size: 0.75em; padding: 4px 8px; border-radius: 20px; color: white; font-weight: bold; }
-        .tag-p { background: #43a047; } .tag-c { background: #f57c00; } .tag-a { background: #d50000; box-shadow: 0 0 8px red;}
+        .type-tag { font-size: 0.7em; padding: 3px 6px; border-radius: 20px; color: white; font-weight: bold; }
+        .tag-p { background: #43a047; } .tag-c { background: #f57c00; } .tag-a { background: #d50000; box-shadow: 0 0 5px red;}
 
         /* Workspace & Nodes */
         #workspace { 
-            flex-grow: 1; position: relative; background-color: #fce4ec; 
+            flex-grow: 1; position: relative; background-color: transparent; 
             background-image: radial-gradient(rgba(0,0,0,0.05) 2px, transparent 2px); 
             background-size: 30px 30px; overflow: hidden; touch-action: none; cursor: grab;
         }
         #workspace:active { cursor: grabbing; }
         
         .zoom-panel {
-            position: absolute; top: 20px; right: 20px; background: var(--glass-bg);
-            padding: 8px 12px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            z-index: 50; display: flex; align-items: center; gap: 10px; border: 1px solid #ddd;
-            cursor: default; /* ป้องกันเมาส์เป็นรูปมือเวลาอยู่บนแผงซูม */
+            position: absolute; bottom: 20px; left: 20px; background: white;
+            padding: 5px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            z-index: 50; display: flex; align-items: center; gap: 5px; border: 1px solid #ddd; cursor: default;
         }
-        .zoom-btn { background: white; border: 1px solid #bbb; border-radius: 6px; width: 30px; height: 30px; font-weight: bold; font-size: 1.2em; cursor: pointer; transition: 0.2s; }
-        .zoom-btn:hover { background: #eee; }
-        .zoom-btn:active { transform: scale(0.9); }
-        .zoom-text { font-weight: bold; min-width: 50px; text-align: center; }
+        .zoom-btn { background: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; width: 28px; height: 28px; font-weight: bold; font-size: 1.1em; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+        .zoom-btn:hover { background: #e0e0e0; }
+        .zoom-text { font-weight: bold; min-width: 45px; text-align: center; font-size: 0.85em; color: #555;}
 
-        #canvas-container { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            transform-origin: top left; transition: transform 0.05s linear; 
-        }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: top left; transition: transform 0.05s linear; }
 
+        /* Node Design */
         .node { 
-            position: absolute; width: 230px; background: rgba(255, 255, 255, 0.95); 
-            border: 2px solid #aaa; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            transition: border-color 0.2s; z-index: 5; display: flex; flex-direction: column;
+            position: absolute; width: 220px; background: rgba(255, 255, 255, 0.95); 
+            border: 2px solid #aaa; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transition: box-shadow 0.2s, border-color 0.2s; z-index: 5; display: flex; flex-direction: column;
             cursor: grab; backdrop-filter: blur(5px);
         }
-        .node:active { cursor: grabbing; box-shadow: 0 15px 35px rgba(0,0,0,0.4); z-index: 1000 !important; }
-        .node.alien-node { border-color: #d50000; box-shadow: 0 0 20px rgba(213, 0, 0, 0.4); }
-        .delete-btn { position: absolute; top: -10px; right: -10px; background: var(--danger); color: white; border: 2px solid white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; }
+        .node:active { cursor: grabbing; box-shadow: 0 12px 25px rgba(0,0,0,0.3); z-index: 1000 !important; }
+        .node.alien-node { border-color: #d50000; box-shadow: 0 0 15px rgba(213, 0, 0, 0.3); }
+        .delete-btn { position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; border: 2px solid white; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; font-size: 0.9em;}
         
-        .node-content { padding: 15px; pointer-events: none; } 
+        .node-content { padding: 12px; pointer-events: none; } 
         .node-content button, .node-content input { pointer-events: auto; } 
         .node-header { display: flex; align-items: center; margin-bottom: 5px; justify-content: center;}
-        .node-header .icon { font-size: 1.8em; margin-right: 5px; }
-        .node .name { font-weight: bold; font-size: 1.2em; color: #222; }
-        .node .role { font-size: 0.8em; text-align: center; margin-bottom: 5px; font-weight: bold; background: #eee; padding: 3px; border-radius: 5px; }
+        .node-header .icon { font-size: 1.6em; margin-right: 5px; }
+        .node .name { font-weight: bold; font-size: 1.1em; color: #222; }
+        .node .role { font-size: 0.75em; text-align: center; margin-bottom: 8px; font-weight: bold; background: #eee; padding: 2px; border-radius: 4px; }
         
-        .pop-controls { display: flex; justify-content: space-between; align-items: center; background: #f0f0f0; border-radius: 8px; padding: 4px; margin-bottom: 10px; pointer-events: auto; border: 1px solid #ddd;}
-        .pop-btn { background: white; border: 1px solid #ccc; border-radius: 5px; width: 25px; height: 25px; cursor: pointer; font-weight: bold; font-size: 1.1em; display: flex; align-items: center; justify-content: center; color: #333; transition: 0.2s;}
+        .pop-controls { display: flex; justify-content: space-between; align-items: center; background: #f0f0f0; border-radius: 6px; padding: 3px; margin-bottom: 8px; pointer-events: auto; border: 1px solid #ddd;}
+        .pop-btn { background: white; border: 1px solid #ccc; border-radius: 4px; width: 22px; height: 22px; cursor: pointer; font-weight: bold; font-size: 1em; display: flex; align-items: center; justify-content: center; color: #333; transition: 0.2s;}
         .pop-btn:hover { background: #e0e0e0; }
         .pop-btn.decrease { color: var(--danger); }
         .pop-btn.increase { color: #43a047; }
         
         .pop-input { 
-            width: 80px; text-align: center; border: 1px solid #ccc; border-radius: 5px; 
-            font-weight: bold; font-family: inherit; font-size: 0.9em; padding: 2px 5px;
+            width: 70px; text-align: center; border: 1px solid #ccc; border-radius: 4px; 
+            font-weight: bold; font-family: inherit; font-size: 0.85em; padding: 2px 4px;
             outline: none; transition: 0.2s; background: white; color: #111;
         }
         .pop-input:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(43, 88, 118, 0.5); }
@@ -130,69 +139,76 @@
         .lvl-c3 { background: #f3e5f5 !important; color: #6a1b9a; }
         .lvl-extinct { background: #eceff1 !important; color: #546e7a; text-decoration: line-through; }
 
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.7em; background: #f9f9f9; padding: 8px; border-radius: 8px; border: 1px solid #eee; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 0.65em; background: #f9f9f9; padding: 6px; border-radius: 6px; border: 1px solid #eee; }
         .data-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .data-label { color: #777; font-size: 0.9em; }
+        .data-label { color: #777; font-size: 0.85em; }
         .data-val { font-weight: bold; font-size: 1.1em; }
         .val-energy { color: #0277bd; } .val-heat { color: #e65100; } .val-mass { color: #558b2f; }
 
         svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: visible; }
-        .link-line { stroke: rgba(100,100,100,0.6); stroke-width: 4; marker-end: url(#arrowhead); }
-        .link-flow { stroke: var(--warning); stroke-width: 2; stroke-dasharray: 10; animation: flow 1s linear infinite; }
-        @keyframes flow { to { stroke-dashoffset: -20; } }
-
-        /* Action Panel */
-        .control-panel { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; z-index: 50; }
-        button.action-btn { padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.2s; font-size: 0.9em; display: flex; align-items: center; gap: 5px; }
-        .btn-sim { background: #2962ff; color: white; } .btn-sim:hover { background: #1565c0; }
-        .btn-graph { background: #aa00ff; color: white; } .btn-graph:hover { background: #6a1b9a; }
-        .btn-pyramid { background: #ff9100; color: white; } .btn-pyramid:hover { background: #ff6d00; }
-        .btn-pdf { background: #00c853; color: white; } .btn-pdf:hover { background: #009624; }
-        .btn-reset { background: var(--danger); color: white; } .btn-reset:hover { background: #b71c1c; }
+        .link-line { stroke: rgba(100,100,100,0.5); stroke-width: 3; marker-end: url(#arrowhead); }
+        .link-flow { stroke: var(--warning); stroke-width: 2; stroke-dasharray: 8; animation: flow 1s linear infinite; }
+        @keyframes flow { to { stroke-dashoffset: -16; } }
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 900px; text-align: center; position: relative; max-height: 90vh; overflow-y: auto; cursor: default; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 85%; max-width: 900px; text-align: center; position: relative; max-height: 90vh; overflow-y: auto; cursor: default; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 2em; cursor: pointer; color: #555; }
         
-        .pyramid-container { display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 20px; gap: 20px; }
-        .pyramid-box { flex: 1; min-width: 320px; background: #f5f5f5; padding: 15px; border-radius: 10px; }
-        
+        .pyramid-container { display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 20px; gap: 15px; }
+        .pyramid-box { flex: 1; min-width: 280px; background: #f5f5f5; padding: 15px; border-radius: 8px; }
         #graph-container { width: 100%; height: 400px; margin-top: 20px; }
         
-        /* Time Display */
-        #time-display { position: absolute; top: 20px; left: 340px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; z-index: 15; font-size: 1.2em;}
-
         /* Report Area */
         #report-area { display: none; background: white; padding: 20mm; color: black; }
         .report-section { margin-bottom: 30px; page-break-inside: avoid; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .app-header { flex-direction: column; align-items: flex-start; }
+            .top-toolbar { width: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 10px;}
+        }
+        @media (max-width: 600px) {
+            .main-container { flex-direction: column; }
+            #sidebar { width: 100%; height: 30vh; border-right: none; border-bottom: 1px solid #ddd; }
+            .info-bar { flex-direction: column; gap: 5px; text-align: center; }
+        }
     </style>
 </head>
 <body>
 
 <div class="app-header">
-    <h1>🌱 EcoConnect <span style="font-size: 0.6em; font-weight: normal;">Dynamics & Simulation</span></h1>
-    <div class="creator-info">
-        <div class="creator">พัฒนาสื่อโดย ครูภควัต สองเมือง</div>
-        <div class="school">รายวิชาชีววิทยาเพิ่มเติม ม.6</div>
+    <div class="header-title">
+        <h1>🌱 EcoConnect <span style="font-size: 0.6em; font-weight: normal; opacity:0.8;">Simulation</span></h1>
+        <div class="creator-info">โดย ครูภควัต สองเมือง (ชีววิทยาเพิ่มเติม ม.6)</div>
+    </div>
+    
+    <div class="top-toolbar">
+        <select id="biome-select" onchange="filterBiome(this.value)" title="เลือกระบบนิเวศ">
+            <option value="red_lotus">🌸 ทะเลบัวแดง (อุดรธานี)</option>
+            <option value="rainforest">🌳 ป่าดิบชื้น</option>
+            <option value="marine">🌊 ทะเล</option>
+            <option value="desert">🏜️ ทะเลทราย</option>
+            <option value="savanna">🦁 ทุ่งหญ้าสะวันน่า</option>
+        </select>
+        <button class="alien-btn" onclick="toggleAlienMode()">⚠️ สลับโหมด Alien</button>
+        <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.3); margin: 0 5px;"></div>
+        <button class="action-btn btn-sim" onclick="simulateYear()">⏩ 1 ปี</button>
+        <button class="action-btn btn-graph" onclick="showGraph()">📈 กราฟ</button>
+        <button class="action-btn btn-pyramid" onclick="showPyramids()">🔺 พีระมิด</button>
+        <button class="action-btn btn-pdf" onclick="exportPDF()">📄 PDF</button>
+        <button class="action-btn btn-reset" onclick="resetBoard()">🗑️ ล้าง</button>
     </div>
 </div>
 
-<div id="status-bar"><span id="status-icon">🌍</span> <span id="status-text">ลากสิ่งมีชีวิตลงพื้นที่เพื่อสร้างระบบนิเวศ</span></div>
-<div id="time-display">⏳ ปีที่: 0</div>
+<div class="info-bar">
+    <div id="status-text"><span id="status-icon">🌍</span> ลากสิ่งมีชีวิตลงพื้นที่เพื่อสร้างระบบนิเวศ</div>
+    <div id="time-display">⏳ ปีที่จำลอง: 0</div>
+</div>
 
 <div class="main-container">
     <div id="sidebar">
-        <div class="sidebar-header">
-            <select id="biome-select" onchange="filterBiome(this.value)">
-                <option value="red_lotus">🌸 ทะเลบัวแดง (อุดรธานี)</option>
-                <option value="rainforest">🌳 ป่าดิบชื้น</option>
-                <option value="marine">🌊 ทะเล</option>
-                <option value="desert">🏜️ ทะเลทราย</option>
-                <option value="savanna">🦁 ทุ่งหญ้าสะวันน่า</option>
-            </select>
-            <button class="alien-btn" onclick="toggleAlienMode()">⚠️ ปล่อย Alien Species</button>
-        </div>
+        <div class="sidebar-header">คลิกเพื่อเพิ่มสิ่งมีชีวิตลงกระดาน</div>
         <div id="organism-list"></div>
     </div>
 
@@ -201,24 +217,15 @@
             <button class="zoom-btn" onclick="changeZoom(-0.1)">-</button>
             <span class="zoom-text" id="zoom-level">100%</span>
             <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
-            <button class="zoom-btn" style="width: auto; padding: 0 10px; font-size: 0.9em;" onclick="resetZoom()">Reset</button>
+            <button class="zoom-btn" style="width: auto; padding: 0 8px; font-size: 0.8em;" onclick="resetZoomAndPan()">Reset</button>
         </div>
 
         <div id="canvas-container">
-            <svg id="svg-canvas"><defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="rgba(100,100,100,0.8)" /></marker></defs></svg>
-        </div>
-
-        <div class="control-panel">
-            <button class="action-btn btn-sim" onclick="simulateYear()">⏩ ข้ามเวลา 1 ปี</button>
-            <button class="action-btn btn-graph" onclick="showGraph()">📈 ดูกราฟประชากร</button>
-            <button class="action-btn btn-pyramid" onclick="showPyramids()">🔺 พีระมิดนิเวศวิทยา</button>
-            <button class="action-btn btn-pdf" onclick="exportPDF()">📄 ส่งออก PDF</button>
-            <button class="action-btn btn-reset" onclick="resetBoard()">🗑️ ล้างกระดาน</button>
+            <svg id="svg-canvas"><defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="rgba(100,100,100,0.6)" /></marker></defs></svg>
         </div>
     </div>
 </div>
 
-<!-- Modals -->
 <div id="pyramid-modal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeModal('pyramid-modal')">&times;</span>
@@ -251,7 +258,6 @@
     }
 
     const ORGANISMS = [
-        // --- ทะเลบัวแดง ---
         { id: 'red_lotus', icon: '🌸', name: 'บัวแดง', type: 'P', eats: [], biome: ['red_lotus'], pop: 1000, maxPop: 3000, weight: 0.5, bEnergy: 20000, bToxin: 0.01, color: '#e91e63', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
         { id: 'hydrilla', icon: '🌿', name: 'สาหร่ายหางกระรอก', type: 'P', eats: [], biome: ['red_lotus'], pop: 1000, maxPop: 4000, weight: 0.05, bEnergy: 15000, bToxin: 0.02, color: '#4caf50', birthRate: 0.4, deathRate: 0.1, migRate: 0 },
         { id: 'apple_snail', icon: '🐌', name: 'หอยเชอรี่ (Alien)', type: 'A', eats: ['red_lotus', 'hydrilla'], biome: ['red_lotus'], pop: 100, maxPop: 2000, weight: 0.05, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.2, deathRate: 0.05, migRate: 0.1 },
@@ -260,7 +266,6 @@
         { id: 'snakehead', icon: '🦈', name: 'ปลาช่อน', type: 'C', eats: ['minnow', 'dragonfly_nymph', 'apple_snail'], biome: ['red_lotus'], pop: 20, maxPop: 100, weight: 0.8, bEnergy: 0, bToxin: 0, color: '#607d8b', birthRate: 0.2, deathRate: 0.1, migRate: 0.02 },
         { id: 'swamphen', icon: '🦤', name: 'นกอีโก้ง', type: 'C', eats: ['red_lotus', 'apple_snail', 'minnow'], biome: ['red_lotus'], pop: 10, maxPop: 50, weight: 1.2, bEnergy: 0, bToxin: 0, color: '#9c27b0', birthRate: 0.15, deathRate: 0.1, migRate: 0.2 },
 
-        // --- ป่าดิบชื้น ---
         { id: 'yang_na', icon: '🌳', name: 'ต้นยางนา', type: 'P', eats: [], biome: ['rainforest'], pop: 500, maxPop: 1000, weight: 2000, bEnergy: 50000, bToxin: 0.005, color: '#2e7d32', birthRate: 0.05, deathRate: 0.02, migRate: 0 },
         { id: 'wild_fig', icon: '🍒', name: 'ลูกไทร/ผลไม้ป่า', type: 'P', eats: [], biome: ['rainforest'], pop: 1000, maxPop: 3000, weight: 0.1, bEnergy: 20000, bToxin: 0.01, color: '#8bc34a', birthRate: 0.4, deathRate: 0.2, migRate: 0 },
         { id: 'hornbill', icon: '🦤', name: 'นกเงือก', type: 'C', eats: ['wild_fig'], biome: ['rainforest'], pop: 50, maxPop: 150, weight: 2.5, bEnergy: 0, bToxin: 0, color: '#ff9800', birthRate: 0.1, deathRate: 0.05, migRate: 0.1 },
@@ -269,7 +274,6 @@
         { id: 'tiger', icon: '🐅', name: 'เสือโคร่ง', type: 'C', eats: ['sambar', 'macaque'], biome: ['rainforest'], pop: 5, maxPop: 20, weight: 180, bEnergy: 0, bToxin: 0, color: '#ff5722', birthRate: 0.08, deathRate: 0.05, migRate: 0.02 },
         { id: 'feral_pig', icon: '🐗', name: 'หมูป่า (Alien)', type: 'A', eats: ['wild_fig', 'yang_na'], biome: ['rainforest'], pop: 20, maxPop: 500, weight: 80, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.8, deathRate: 0.1, migRate: 0.1 },
 
-        // --- ทะเล ---
         { id: 'phytoplankton', icon: '🦠', name: 'แพลงก์ตอนพืช', type: 'P', eats: [], biome: ['marine'], pop: 1000, maxPop: 5000, weight: 0.0001, bEnergy: 30000, bToxin: 0.02, color: '#00bcd4', birthRate: 0.9, deathRate: 0.4, migRate: 0.1 },
         { id: 'seagrass', icon: '🌱', name: 'หญ้าทะเล', type: 'P', eats: [], biome: ['marine'], pop: 1000, maxPop: 3000, weight: 0.2, bEnergy: 25000, bToxin: 0.01, color: '#4caf50', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
         { id: 'zooplankton', icon: '🦐', name: 'แพลงก์ตอนสัตว์', type: 'C', eats: ['phytoplankton'], biome: ['marine'], pop: 800, maxPop: 4000, weight: 0.0005, bEnergy: 0, bToxin: 0, color: '#ffb74d', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
@@ -279,7 +283,6 @@
         { id: 'shark', icon: '🦈', name: 'ฉลามครีบดำ', type: 'C', eats: ['grouper', 'sea_turtle'], biome: ['marine'], pop: 5, maxPop: 20, weight: 80, bEnergy: 0, bToxin: 0, color: '#455a64', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
         { id: 'lionfish', icon: '🐠', name: 'ปลาปักเป้าสิงโต (Alien)', type: 'A', eats: ['sardine', 'zooplankton'], biome: ['marine'], pop: 10, maxPop: 500, weight: 1.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.0, deathRate: 0.05, migRate: 0.2 },
 
-        // --- ทะเลทราย ---
         { id: 'cactus', icon: '🌵', name: 'กระบองเพชร', type: 'P', eats: [], biome: ['desert'], pop: 800, maxPop: 2000, weight: 5.0, bEnergy: 20000, bToxin: 0.01, color: '#689f38', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
         { id: 'desert_shrub', icon: '🌿', name: 'พุ่มไม้หนาม', type: 'P', eats: [], biome: ['desert'], pop: 900, maxPop: 2500, weight: 2.0, bEnergy: 15000, bToxin: 0.02, color: '#afb42b', birthRate: 0.15, deathRate: 0.1, migRate: 0 },
         { id: 'desert_beetle', icon: '🪲', name: 'แมลงปีกแข็งทะเลทราย', type: 'C', eats: ['desert_shrub'], biome: ['desert'], pop: 600, maxPop: 2000, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#3e2723', birthRate: 0.4, deathRate: 0.2, migRate: 0.05 },
@@ -288,7 +291,6 @@
         { id: 'desert_hawk', icon: '🦅', name: 'เหยี่ยวทะเลทราย', type: 'C', eats: ['rattlesnake', 'kangaroo_rat'], biome: ['desert'], pop: 10, maxPop: 50, weight: 2.0, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
         { id: 'feral_cat', icon: '🐈', name: 'แมวจรจัด (Alien)', type: 'A', eats: ['kangaroo_rat', 'desert_hawk'], biome: ['desert'], pop: 5, maxPop: 100, weight: 4.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.6, deathRate: 0.1, migRate: 0.1 },
 
-        // --- สะวันน่า ---
         { id: 'elephant_grass', icon: '🌾', name: 'หญ้าช้าง', type: 'P', eats: [], biome: ['savanna'], pop: 1000, maxPop: 5000, weight: 0.05, bEnergy: 40000, bToxin: 0.01, color: '#cddc39', birthRate: 0.5, deathRate: 0.2, migRate: 0 },
         { id: 'acacia', icon: '🌳', name: 'ต้นอาเคเซีย', type: 'P', eats: [], biome: ['savanna'], pop: 600, maxPop: 1500, weight: 1000, bEnergy: 45000, bToxin: 0.02, color: '#2e7d32', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
         { id: 'zebra', icon: '🦓', name: 'ม้าลาย', type: 'C', eats: ['elephant_grass'], biome: ['savanna'], pop: 200, maxPop: 800, weight: 300, bEnergy: 0, bToxin: 0, color: '#9e9e9e', birthRate: 0.15, deathRate: 0.1, migRate: 0.1 },
@@ -303,62 +305,58 @@
     let currentYear = 0;
     let chartInstance = null;
     
-    // --- ระบบ Zoom & Pan กระดาน ---
+    // --- ระบบ Pan & Zoom กระดาน ---
     let currentScale = 1.0; 
     let panX = 0, panY = 0;
-    let isPanning = false, startPanX = 0, startPanY = 0;
+    let isPanning = false, startPanX = 0, startPanY = 0, initPanX = 0, initPanY = 0;
 
+    const workspaceEl = document.getElementById('workspace');
     const canvas = document.getElementById('canvas-container');
     const svg = document.getElementById('svg-canvas');
-    const workspaceEl = document.getElementById('workspace');
 
     function applyTransform() {
         canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
-        document.getElementById('zoom-level').innerText = Math.round(currentScale * 100) + '%';
         workspaceEl.style.backgroundPosition = `${panX}px ${panY}px`;
         workspaceEl.style.backgroundSize = `${30 * currentScale}px ${30 * currentScale}px`;
+        document.getElementById('zoom-level').innerText = Math.round(currentScale * 100) + '%';
     }
 
     function changeZoom(delta) {
         currentScale += delta;
-        if (currentScale < 0.3) currentScale = 0.3; 
-        if (currentScale > 2.5) currentScale = 2.5; 
+        if (currentScale < 0.4) currentScale = 0.4; 
+        if (currentScale > 2.0) currentScale = 2.0; 
         applyTransform();
     }
     
-    function resetZoom() { 
-        currentScale = 1.0; 
-        panX = 0; panY = 0;
-        applyTransform(); 
+    function resetZoomAndPan() { 
+        currentScale = 1.0; panX = 0; panY = 0; applyTransform(); 
     }
 
-    // เลื่อนกระดาน (Mouse & Touch)
     workspaceEl.addEventListener('pointerdown', e => {
-        if (e.target.closest('.node') || e.target.closest('.control-panel') || e.target.closest('.zoom-panel')) return;
+        if (e.target.closest('.node') || e.target.closest('.zoom-panel')) return;
         isPanning = true;
-        startPanX = e.clientX - panX;
-        startPanY = e.clientY - panY;
+        startPanX = e.clientX; startPanY = e.clientY;
+        initPanX = panX; initPanY = panY;
+        workspaceEl.setPointerCapture(e.pointerId);
     });
-    window.addEventListener('pointermove', e => {
+
+    workspaceEl.addEventListener('pointermove', e => {
         if (!isPanning) return;
-        panX = e.clientX - startPanX;
-        panY = e.clientY - startPanY;
+        panX = initPanX + (e.clientX - startPanX);
+        panY = initPanY + (e.clientY - startPanY);
         applyTransform();
     });
-    window.addEventListener('pointerup', () => { isPanning = false; });
-    window.addEventListener('pointercancel', () => { isPanning = false; });
 
-    // ถ่างนิ้วซูม (Pinch-to-zoom) สำหรับแท็บเล็ต
-    let initialPinchDist = null;
-    let initialScale = 1;
+    workspaceEl.addEventListener('pointerup', e => {
+        isPanning = false; workspaceEl.releasePointerCapture(e.pointerId);
+    });
 
+    // Pinch-to-zoom (Tablet/Mobile)
+    let initialPinchDist = null, initialScale = 1;
     workspaceEl.addEventListener('touchstart', e => {
         if (e.touches.length === 2) {
             isPanning = false;
-            initialPinchDist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
+            initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
             initialScale = currentScale;
         }
     }, {passive: false});
@@ -366,25 +364,16 @@
     workspaceEl.addEventListener('touchmove', e => {
         if (e.touches.length === 2) {
             e.preventDefault(); 
-            const dist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
-            const scaleChange = dist / initialPinchDist;
-            currentScale = initialScale * scaleChange;
-            if (currentScale < 0.3) currentScale = 0.3;
-            if (currentScale > 2.5) currentScale = 2.5;
+            const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            currentScale = Math.min(Math.max(0.4, initialScale * (dist / initialPinchDist)), 2.0);
             applyTransform();
         }
     }, {passive: false});
-    workspaceEl.addEventListener('touchend', e => { if (e.touches.length < 2) initialPinchDist = null; });
 
-    // ซูมด้วยลูกกลิ้งเมาส์ (Mouse Wheel)
     workspaceEl.addEventListener('wheel', e => {
         if (e.target.closest('.node')) return; 
         e.preventDefault();
-        const delta = e.deltaY > 0 ? -0.1 : 0.1;
-        changeZoom(delta);
+        changeZoom(e.deltaY > 0 ? -0.1 : 0.1);
     }, {passive: false});
 
 
@@ -411,12 +400,9 @@
         playSound(org.type === 'A' ? 'alien' : 'drop');
         const id = 'node_' + Date.now();
         
-        // คำนวณให้ลงตรงกลางหน้าจอ แม้กระดานจะโดนเลื่อน/ซูมไปแล้ว
         const rect = workspaceEl.getBoundingClientRect();
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const x = (centerX - 115 - panX) / currentScale + (Math.random()*60 - 30);
-        const y = (centerY - 100 - panY) / currentScale + (Math.random()*60 - 30);
+        const x = (rect.width/2 - panX - 110) / currentScale + (Math.random()*40 - 20);
+        const y = (rect.height/2 - panY - 80) / currentScale + (Math.random()*40 - 20);
 
         let newNode = {
             id: id, refId: org.id, name: org.name, icon: org.icon, type: org.type, eats: org.eats, color: org.color,
@@ -486,7 +472,7 @@
         let isDragging = false, startX, startY, initX, initY;
         el.addEventListener('pointerdown', e => {
             if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
-            e.stopPropagation(); // สำคัญ! ป้องกันไม่ให้ทะลุไปเลื่อนกระดาน
+            e.stopPropagation();
             isDragging = true; startX = e.clientX; startY = e.clientY;
             initX = el.offsetLeft; initY = el.offsetTop;
             el.setPointerCapture(e.pointerId);
@@ -547,11 +533,11 @@
         for(let key in adjList) if(adjList[key].length > 1) isWeb = true;
         for(let key in reverseAdjList) if(reverseAdjList[key].length > 1) isWeb = true;
 
-        const statusEl = document.getElementById('status-bar'); const statusText = document.getElementById('status-text'); const statusIcon = document.getElementById('status-icon');
-        statusEl.className = '';
-        if(edgesCount === 0 && activeNodes.length > 0) { statusText.innerText = "สิ่งมีชีวิตยังไม่มีการกินกัน"; statusIcon.innerText = "🌱"; }
-        else if(isWeb) { statusText.innerText = "สายใยอาหาร (Food Web)"; statusIcon.innerText = "🕸️"; statusEl.classList.add('status-web'); }
-        else if(edgesCount > 0) { statusText.innerText = "ห่วงโซ่อาหาร (Food Chain)"; statusIcon.innerText = "🔗"; statusEl.classList.add('status-chain'); }
+        const statusText = document.getElementById('status-text'); 
+        if(edgesCount === 0 && activeNodes.length > 0) { statusText.innerHTML = "🌱 สิ่งมีชีวิตยังไม่มีการกินกัน"; statusText.style.color = "#555"; }
+        else if(isWeb) { statusText.innerHTML = "🕸️ สายใยอาหาร (Food Web)"; statusText.style.color = "#6a1b9a"; }
+        else if(edgesCount > 0) { statusText.innerHTML = "🔗 ห่วงโซ่อาหาร (Food Chain)"; statusText.style.color = "#0277bd"; }
+        else { statusText.innerHTML = "🌍 ลากสิ่งมีชีวิตลงพื้นที่เพื่อสร้างระบบนิเวศ"; statusText.style.color = "#555"; }
         
         updateUI();
     }
@@ -560,7 +546,7 @@
         activeNodes.forEach(n => {
             const el = document.getElementById(n.id); if(!el) return;
             let roleClass = n.pop === 0 ? 'lvl-extinct' : (n.level === 1 ? 'lvl-p' : (n.level === 0 ? 'lvl-extinct' : (n.level === 2 ? 'lvl-c1' : 'lvl-c2')));
-            let roleText = n.pop === 0 ? 'สูญพันธุ์' : (n.level === 1 ? 'ผู้ผลิต (T1)' : (n.level === 0 ? 'ขาดอาหาร (Starving)' : `ผู้บริโภค (T${n.level})`));
+            let roleText = n.pop === 0 ? 'สูญพันธุ์' : (n.level === 1 ? 'ผู้ผลิต (T1)' : (n.level === 0 ? 'ขาดอาหาร' : `ผู้บริโภค (T${n.level})`));
 
             const existingInput = el.querySelector('.pop-input');
             const isFocused = existingInput && document.activeElement === existingInput;
@@ -597,7 +583,7 @@
     }
 
     function drawConnections() {
-        svg.innerHTML = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="rgba(100,100,100,0.8)" /></marker></defs>';
+        svg.innerHTML = '<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="rgba(100,100,100,0.6)" /></marker></defs>';
         activeNodes.forEach(target => {
             activeNodes.forEach(source => {
                 if(target.eats.includes(source.refId) && source.pop > 0 && target.pop > 0) {
@@ -605,7 +591,7 @@
                     if(!elS || !elT) return;
                     const sX = elS.offsetLeft + elS.offsetWidth/2; const sY = elS.offsetTop + elS.offsetHeight/2;
                     const tX = elT.offsetLeft + elT.offsetWidth/2; const tY = elT.offsetTop + elT.offsetHeight/2;
-                    const angle = Math.atan2(tY - sY, tX - sX); const endX = tX - Math.cos(angle) * 115; const endY = tY - Math.sin(angle) * 115;
+                    const angle = Math.atan2(tY - sY, tX - sX); const endX = tX - Math.cos(angle) * 110; const endY = tY - Math.sin(angle) * 110;
                     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                     line.setAttribute("x1", sX); line.setAttribute("y1", sY); line.setAttribute("x2", endX); line.setAttribute("y2", endY); line.setAttribute("class", "link-line"); svg.appendChild(line);
                     const flowLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -618,7 +604,7 @@
     function simulateYear() {
         if(activeNodes.length === 0) return;
         currentYear++;
-        document.getElementById('time-display').innerText = `⏳ ปีที่: ${currentYear}`;
+        document.getElementById('time-display').innerText = `⏳ ปีที่จำลอง: ${currentYear}`;
         
         activeNodes.forEach(n => {
             let growthMultiplier = (1 - (n.pop / n.maxPop)); 
@@ -849,9 +835,9 @@
         if(!confirm("ต้องการล้างกระดานและรีเซ็ตเวลาใช่หรือไม่?")) return;
         activeNodes.forEach(n => document.getElementById(n.id).remove());
         activeNodes = []; currentYear = 0;
-        document.getElementById('time-display').innerText = `⏳ ปีที่: 0`;
+        document.getElementById('time-display').innerText = `⏳ ปีที่จำลอง: 0`;
         if(chartInstance) chartInstance.destroy();
-        svg.innerHTML = ''; resetZoom(); recalculateEcosystem();
+        svg.innerHTML = ''; resetZoomAndPan(); recalculateEcosystem();
     }
 
     filterBiome('red_lotus');
