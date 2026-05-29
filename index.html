@@ -227,7 +227,6 @@
 <div id="report-area"></div>
 
 <script>
-    // ปิด Animation ของ Chart.js ชั่วคราวเพื่อให้แคปเจอร์ภาพลง PDF ได้ทันที
     Chart.defaults.animation = false;
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -240,53 +239,53 @@
         if (type === 'alien') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5); gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
     }
 
-    // เพิ่มพารามิเตอร์: birthRate (เกิด), deathRate (ตาย), migRate (อพยพ)
+    // อัปเดตประชากรตั้งต้นให้ <= 1000 และปรับ Max Pop
     const ORGANISMS = [
         // --- ทะเลบัวแดง ---
-        { id: 'red_lotus', icon: '🌸', name: 'บัวแดง', type: 'P', eats: [], biome: ['red_lotus'], pop: 50000, maxPop: 100000, weight: 0.5, bEnergy: 10000, bToxin: 0.01, color: '#e91e63', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
-        { id: 'hydrilla', icon: '🌿', name: 'สาหร่ายหางกระรอก', type: 'P', eats: [], biome: ['red_lotus'], pop: 100000, maxPop: 200000, weight: 0.05, bEnergy: 5000, bToxin: 0.02, color: '#4caf50', birthRate: 0.4, deathRate: 0.1, migRate: 0 },
-        { id: 'apple_snail', icon: '🐌', name: 'หอยเชอรี่ (Alien)', type: 'A', eats: ['red_lotus', 'hydrilla'], biome: ['red_lotus'], pop: 500, maxPop: 50000, weight: 0.05, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.2, deathRate: 0.05, migRate: 0.1 },
-        { id: 'dragonfly_nymph', icon: '🦗', name: 'ตัวอ่อนแมลงปอ', type: 'C', eats: ['hydrilla'], biome: ['red_lotus'], pop: 15000, maxPop: 40000, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.5, deathRate: 0.2, migRate: 0.05 },
-        { id: 'minnow', icon: '🐟', name: 'ปลาซิวหน้าหัก', type: 'C', eats: ['dragonfly_nymph', 'hydrilla'], biome: ['red_lotus'], pop: 8000, maxPop: 20000, weight: 0.02, bEnergy: 0, bToxin: 0, color: '#03a9f4', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
-        { id: 'snakehead', icon: '🦈', name: 'ปลาช่อน', type: 'C', eats: ['minnow', 'dragonfly_nymph', 'apple_snail'], biome: ['red_lotus'], pop: 300, maxPop: 1000, weight: 0.8, bEnergy: 0, bToxin: 0, color: '#607d8b', birthRate: 0.2, deathRate: 0.1, migRate: 0.02 },
-        { id: 'swamphen', icon: '🦤', name: 'นกอีโก้ง', type: 'C', eats: ['red_lotus', 'apple_snail', 'minnow'], biome: ['red_lotus'], pop: 150, maxPop: 500, weight: 1.2, bEnergy: 0, bToxin: 0, color: '#9c27b0', birthRate: 0.15, deathRate: 0.1, migRate: 0.2 },
+        { id: 'red_lotus', icon: '🌸', name: 'บัวแดง', type: 'P', eats: [], biome: ['red_lotus'], pop: 1000, maxPop: 3000, weight: 0.5, bEnergy: 20000, bToxin: 0.01, color: '#e91e63', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
+        { id: 'hydrilla', icon: '🌿', name: 'สาหร่ายหางกระรอก', type: 'P', eats: [], biome: ['red_lotus'], pop: 1000, maxPop: 4000, weight: 0.05, bEnergy: 15000, bToxin: 0.02, color: '#4caf50', birthRate: 0.4, deathRate: 0.1, migRate: 0 },
+        { id: 'apple_snail', icon: '🐌', name: 'หอยเชอรี่ (Alien)', type: 'A', eats: ['red_lotus', 'hydrilla'], biome: ['red_lotus'], pop: 100, maxPop: 2000, weight: 0.05, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.2, deathRate: 0.05, migRate: 0.1 },
+        { id: 'dragonfly_nymph', icon: '🦗', name: 'ตัวอ่อนแมลงปอ', type: 'C', eats: ['hydrilla'], biome: ['red_lotus'], pop: 500, maxPop: 1500, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.5, deathRate: 0.2, migRate: 0.05 },
+        { id: 'minnow', icon: '🐟', name: 'ปลาซิวหน้าหัก', type: 'C', eats: ['dragonfly_nymph', 'hydrilla'], biome: ['red_lotus'], pop: 300, maxPop: 1000, weight: 0.02, bEnergy: 0, bToxin: 0, color: '#03a9f4', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
+        { id: 'snakehead', icon: '🦈', name: 'ปลาช่อน', type: 'C', eats: ['minnow', 'dragonfly_nymph', 'apple_snail'], biome: ['red_lotus'], pop: 20, maxPop: 100, weight: 0.8, bEnergy: 0, bToxin: 0, color: '#607d8b', birthRate: 0.2, deathRate: 0.1, migRate: 0.02 },
+        { id: 'swamphen', icon: '🦤', name: 'นกอีโก้ง', type: 'C', eats: ['red_lotus', 'apple_snail', 'minnow'], biome: ['red_lotus'], pop: 10, maxPop: 50, weight: 1.2, bEnergy: 0, bToxin: 0, color: '#9c27b0', birthRate: 0.15, deathRate: 0.1, migRate: 0.2 },
 
         // --- ป่าดิบชื้น ---
-        { id: 'yang_na', icon: '🌳', name: 'ต้นยางนา', type: 'P', eats: [], biome: ['rainforest'], pop: 1000, maxPop: 2000, weight: 2000, bEnergy: 80000, bToxin: 0.005, color: '#2e7d32', birthRate: 0.05, deathRate: 0.02, migRate: 0 },
-        { id: 'wild_fig', icon: '🍒', name: 'ลูกไทร/ผลไม้ป่า', type: 'P', eats: [], biome: ['rainforest'], pop: 10000, maxPop: 30000, weight: 0.1, bEnergy: 15000, bToxin: 0.01, color: '#8bc34a', birthRate: 0.4, deathRate: 0.2, migRate: 0 },
-        { id: 'hornbill', icon: '🦤', name: 'นกเงือก', type: 'C', eats: ['wild_fig'], biome: ['rainforest'], pop: 200, maxPop: 600, weight: 2.5, bEnergy: 0, bToxin: 0, color: '#ff9800', birthRate: 0.1, deathRate: 0.05, migRate: 0.1 },
-        { id: 'macaque', icon: '🐒', name: 'ลิงกัง', type: 'C', eats: ['wild_fig', 'hornbill'], biome: ['rainforest'], pop: 500, maxPop: 1500, weight: 8.0, bEnergy: 0, bToxin: 0, color: '#8d6e63', birthRate: 0.2, deathRate: 0.1, migRate: 0.05 },
-        { id: 'sambar', icon: '🦌', name: 'กวางป่า', type: 'C', eats: ['yang_na', 'wild_fig'], biome: ['rainforest'], pop: 300, maxPop: 1000, weight: 150, bEnergy: 0, bToxin: 0, color: '#a1887f', birthRate: 0.15, deathRate: 0.08, migRate: 0.05 },
-        { id: 'tiger', icon: '🐅', name: 'เสือโคร่ง', type: 'C', eats: ['sambar', 'macaque'], biome: ['rainforest'], pop: 10, maxPop: 30, weight: 180, bEnergy: 0, bToxin: 0, color: '#ff5722', birthRate: 0.08, deathRate: 0.05, migRate: 0.02 },
-        { id: 'feral_pig', icon: '🐗', name: 'หมูป่า (Alien)', type: 'A', eats: ['wild_fig', 'yang_na'], biome: ['rainforest'], pop: 50, maxPop: 5000, weight: 80, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.8, deathRate: 0.1, migRate: 0.1 },
+        { id: 'yang_na', icon: '🌳', name: 'ต้นยางนา', type: 'P', eats: [], biome: ['rainforest'], pop: 500, maxPop: 1000, weight: 2000, bEnergy: 50000, bToxin: 0.005, color: '#2e7d32', birthRate: 0.05, deathRate: 0.02, migRate: 0 },
+        { id: 'wild_fig', icon: '🍒', name: 'ลูกไทร/ผลไม้ป่า', type: 'P', eats: [], biome: ['rainforest'], pop: 1000, maxPop: 3000, weight: 0.1, bEnergy: 20000, bToxin: 0.01, color: '#8bc34a', birthRate: 0.4, deathRate: 0.2, migRate: 0 },
+        { id: 'hornbill', icon: '🦤', name: 'นกเงือก', type: 'C', eats: ['wild_fig'], biome: ['rainforest'], pop: 50, maxPop: 150, weight: 2.5, bEnergy: 0, bToxin: 0, color: '#ff9800', birthRate: 0.1, deathRate: 0.05, migRate: 0.1 },
+        { id: 'macaque', icon: '🐒', name: 'ลิงกัง', type: 'C', eats: ['wild_fig', 'hornbill'], biome: ['rainforest'], pop: 100, maxPop: 300, weight: 8.0, bEnergy: 0, bToxin: 0, color: '#8d6e63', birthRate: 0.2, deathRate: 0.1, migRate: 0.05 },
+        { id: 'sambar', icon: '🦌', name: 'กวางป่า', type: 'C', eats: ['yang_na', 'wild_fig'], biome: ['rainforest'], pop: 60, maxPop: 200, weight: 150, bEnergy: 0, bToxin: 0, color: '#a1887f', birthRate: 0.15, deathRate: 0.08, migRate: 0.05 },
+        { id: 'tiger', icon: '🐅', name: 'เสือโคร่ง', type: 'C', eats: ['sambar', 'macaque'], biome: ['rainforest'], pop: 5, maxPop: 20, weight: 180, bEnergy: 0, bToxin: 0, color: '#ff5722', birthRate: 0.08, deathRate: 0.05, migRate: 0.02 },
+        { id: 'feral_pig', icon: '🐗', name: 'หมูป่า (Alien)', type: 'A', eats: ['wild_fig', 'yang_na'], biome: ['rainforest'], pop: 20, maxPop: 500, weight: 80, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.8, deathRate: 0.1, migRate: 0.1 },
 
         // --- ทะเล ---
-        { id: 'phytoplankton', icon: '🦠', name: 'แพลงก์ตอนพืช', type: 'P', eats: [], biome: ['marine'], pop: 500000, maxPop: 1000000, weight: 0.0001, bEnergy: 100000, bToxin: 0.02, color: '#00bcd4', birthRate: 0.9, deathRate: 0.4, migRate: 0.1 },
-        { id: 'seagrass', icon: '🌱', name: 'หญ้าทะเล', type: 'P', eats: [], biome: ['marine'], pop: 80000, maxPop: 150000, weight: 0.2, bEnergy: 20000, bToxin: 0.01, color: '#4caf50', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
-        { id: 'zooplankton', icon: '🦐', name: 'แพลงก์ตอนสัตว์', type: 'C', eats: ['phytoplankton'], biome: ['marine'], pop: 200000, maxPop: 500000, weight: 0.0005, bEnergy: 0, bToxin: 0, color: '#ffb74d', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
-        { id: 'sea_turtle', icon: '🐢', name: 'เต่าตนุ', type: 'C', eats: ['seagrass'], biome: ['marine'], pop: 150, maxPop: 400, weight: 100, bEnergy: 0, bToxin: 0, color: '#388e3c', birthRate: 0.05, deathRate: 0.02, migRate: 0.05 },
-        { id: 'sardine', icon: '🐟', name: 'ปลาซาร์ดีน', type: 'C', eats: ['zooplankton', 'phytoplankton'], biome: ['marine'], pop: 50000, maxPop: 120000, weight: 0.1, bEnergy: 0, bToxin: 0, color: '#1976d2', birthRate: 0.5, deathRate: 0.2, migRate: 0.2 },
-        { id: 'grouper', icon: '🐡', name: 'ปลาเก๋า', type: 'C', eats: ['sardine'], biome: ['marine'], pop: 1000, maxPop: 3000, weight: 15, bEnergy: 0, bToxin: 0, color: '#5d4037', birthRate: 0.15, deathRate: 0.1, migRate: 0.05 },
-        { id: 'shark', icon: '🦈', name: 'ฉลามครีบดำ', type: 'C', eats: ['grouper', 'sea_turtle'], biome: ['marine'], pop: 50, maxPop: 150, weight: 80, bEnergy: 0, bToxin: 0, color: '#455a64', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
-        { id: 'lionfish', icon: '🐠', name: 'ปลาปักเป้าสิงโต (Alien)', type: 'A', eats: ['sardine', 'zooplankton'], biome: ['marine'], pop: 20, maxPop: 5000, weight: 1.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.0, deathRate: 0.05, migRate: 0.2 },
+        { id: 'phytoplankton', icon: '🦠', name: 'แพลงก์ตอนพืช', type: 'P', eats: [], biome: ['marine'], pop: 1000, maxPop: 5000, weight: 0.0001, bEnergy: 30000, bToxin: 0.02, color: '#00bcd4', birthRate: 0.9, deathRate: 0.4, migRate: 0.1 },
+        { id: 'seagrass', icon: '🌱', name: 'หญ้าทะเล', type: 'P', eats: [], biome: ['marine'], pop: 1000, maxPop: 3000, weight: 0.2, bEnergy: 25000, bToxin: 0.01, color: '#4caf50', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
+        { id: 'zooplankton', icon: '🦐', name: 'แพลงก์ตอนสัตว์', type: 'C', eats: ['phytoplankton'], biome: ['marine'], pop: 800, maxPop: 4000, weight: 0.0005, bEnergy: 0, bToxin: 0, color: '#ffb74d', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
+        { id: 'sea_turtle', icon: '🐢', name: 'เต่าตนุ', type: 'C', eats: ['seagrass'], biome: ['marine'], pop: 15, maxPop: 50, weight: 100, bEnergy: 0, bToxin: 0, color: '#388e3c', birthRate: 0.05, deathRate: 0.02, migRate: 0.05 },
+        { id: 'sardine', icon: '🐟', name: 'ปลาซาร์ดีน', type: 'C', eats: ['zooplankton', 'phytoplankton'], biome: ['marine'], pop: 400, maxPop: 2000, weight: 0.1, bEnergy: 0, bToxin: 0, color: '#1976d2', birthRate: 0.5, deathRate: 0.2, migRate: 0.2 },
+        { id: 'grouper', icon: '🐡', name: 'ปลาเก๋า', type: 'C', eats: ['sardine'], biome: ['marine'], pop: 50, maxPop: 200, weight: 15, bEnergy: 0, bToxin: 0, color: '#5d4037', birthRate: 0.15, deathRate: 0.1, migRate: 0.05 },
+        { id: 'shark', icon: '🦈', name: 'ฉลามครีบดำ', type: 'C', eats: ['grouper', 'sea_turtle'], biome: ['marine'], pop: 5, maxPop: 20, weight: 80, bEnergy: 0, bToxin: 0, color: '#455a64', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
+        { id: 'lionfish', icon: '🐠', name: 'ปลาปักเป้าสิงโต (Alien)', type: 'A', eats: ['sardine', 'zooplankton'], biome: ['marine'], pop: 10, maxPop: 500, weight: 1.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.0, deathRate: 0.05, migRate: 0.2 },
 
         // --- ทะเลทราย ---
-        { id: 'cactus', icon: '🌵', name: 'กระบองเพชร', type: 'P', eats: [], biome: ['desert'], pop: 5000, maxPop: 10000, weight: 5.0, bEnergy: 15000, bToxin: 0.01, color: '#689f38', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
-        { id: 'desert_shrub', icon: '🌿', name: 'พุ่มไม้หนาม', type: 'P', eats: [], biome: ['desert'], pop: 8000, maxPop: 15000, weight: 2.0, bEnergy: 10000, bToxin: 0.02, color: '#afb42b', birthRate: 0.15, deathRate: 0.1, migRate: 0 },
-        { id: 'desert_beetle', icon: '🪲', name: 'แมลงปีกแข็งทะเลทราย', type: 'C', eats: ['desert_shrub'], biome: ['desert'], pop: 20000, maxPop: 50000, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#3e2723', birthRate: 0.4, deathRate: 0.2, migRate: 0.05 },
-        { id: 'kangaroo_rat', icon: '🐁', name: 'หนูจิงโจ้', type: 'C', eats: ['cactus', 'desert_shrub', 'desert_beetle'], biome: ['desert'], pop: 3000, maxPop: 8000, weight: 0.15, bEnergy: 0, bToxin: 0, color: '#bcaaa4', birthRate: 0.3, deathRate: 0.15, migRate: 0.05 },
-        { id: 'rattlesnake', icon: '🐍', name: 'งูหางกระดิ่ง', type: 'C', eats: ['kangaroo_rat'], biome: ['desert'], pop: 200, maxPop: 600, weight: 1.5, bEnergy: 0, bToxin: 0, color: '#fbc02d', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
-        { id: 'desert_hawk', icon: '🦅', name: 'เหยี่ยวทะเลทราย', type: 'C', eats: ['rattlesnake', 'kangaroo_rat'], biome: ['desert'], pop: 40, maxPop: 100, weight: 2.0, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
-        { id: 'feral_cat', icon: '🐈', name: 'แมวจรจัด (Alien)', type: 'A', eats: ['kangaroo_rat', 'desert_hawk'], biome: ['desert'], pop: 10, maxPop: 1000, weight: 4.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.6, deathRate: 0.1, migRate: 0.1 },
+        { id: 'cactus', icon: '🌵', name: 'กระบองเพชร', type: 'P', eats: [], biome: ['desert'], pop: 800, maxPop: 2000, weight: 5.0, bEnergy: 20000, bToxin: 0.01, color: '#689f38', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
+        { id: 'desert_shrub', icon: '🌿', name: 'พุ่มไม้หนาม', type: 'P', eats: [], biome: ['desert'], pop: 900, maxPop: 2500, weight: 2.0, bEnergy: 15000, bToxin: 0.02, color: '#afb42b', birthRate: 0.15, deathRate: 0.1, migRate: 0 },
+        { id: 'desert_beetle', icon: '🪲', name: 'แมลงปีกแข็งทะเลทราย', type: 'C', eats: ['desert_shrub'], biome: ['desert'], pop: 600, maxPop: 2000, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#3e2723', birthRate: 0.4, deathRate: 0.2, migRate: 0.05 },
+        { id: 'kangaroo_rat', icon: '🐁', name: 'หนูจิงโจ้', type: 'C', eats: ['cactus', 'desert_shrub', 'desert_beetle'], biome: ['desert'], pop: 200, maxPop: 800, weight: 0.15, bEnergy: 0, bToxin: 0, color: '#bcaaa4', birthRate: 0.3, deathRate: 0.15, migRate: 0.05 },
+        { id: 'rattlesnake', icon: '🐍', name: 'งูหางกระดิ่ง', type: 'C', eats: ['kangaroo_rat'], biome: ['desert'], pop: 40, maxPop: 150, weight: 1.5, bEnergy: 0, bToxin: 0, color: '#fbc02d', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
+        { id: 'desert_hawk', icon: '🦅', name: 'เหยี่ยวทะเลทราย', type: 'C', eats: ['rattlesnake', 'kangaroo_rat'], biome: ['desert'], pop: 10, maxPop: 50, weight: 2.0, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
+        { id: 'feral_cat', icon: '🐈', name: 'แมวจรจัด (Alien)', type: 'A', eats: ['kangaroo_rat', 'desert_hawk'], biome: ['desert'], pop: 5, maxPop: 100, weight: 4.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.6, deathRate: 0.1, migRate: 0.1 },
 
         // --- สะวันน่า ---
-        { id: 'elephant_grass', icon: '🌾', name: 'หญ้าเนเปียร์/ช้าง', type: 'P', eats: [], biome: ['savanna'], pop: 300000, maxPop: 800000, weight: 0.05, bEnergy: 60000, bToxin: 0.01, color: '#cddc39', birthRate: 0.5, deathRate: 0.2, migRate: 0 },
-        { id: 'acacia', icon: '🌳', name: 'ต้นอาเคเซีย', type: 'P', eats: [], biome: ['savanna'], pop: 2000, maxPop: 5000, weight: 1000, bEnergy: 50000, bToxin: 0.02, color: '#2e7d32', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
-        { id: 'zebra', icon: '🦓', name: 'ม้าลาย', type: 'C', eats: ['elephant_grass'], biome: ['savanna'], pop: 2500, maxPop: 6000, weight: 300, bEnergy: 0, bToxin: 0, color: '#9e9e9e', birthRate: 0.15, deathRate: 0.1, migRate: 0.1 },
-        { id: 'giraffe', icon: '🦒', name: 'ยีราฟ', type: 'C', eats: ['acacia'], biome: ['savanna'], pop: 500, maxPop: 1200, weight: 800, bEnergy: 0, bToxin: 0, color: '#ffb300', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
-        { id: 'lion', icon: '🦁', name: 'สิงโต', type: 'C', eats: ['zebra', 'giraffe'], biome: ['savanna'], pop: 80, maxPop: 200, weight: 190, bEnergy: 0, bToxin: 0, color: '#f57f17', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
-        { id: 'hyena', icon: '🐆', name: 'ไฮยีน่า', type: 'C', eats: ['zebra'], biome: ['savanna'], pop: 150, maxPop: 400, weight: 50, bEnergy: 0, bToxin: 0, color: '#5d4037', birthRate: 0.2, deathRate: 0.1, migRate: 0.05 },
-        { id: 'red_fire_ant', icon: '🐜', name: 'มดคันไฟ (Alien)', type: 'A', eats: ['elephant_grass', 'zebra'], biome: ['savanna'], pop: 10000, maxPop: 1000000, weight: 0.0001, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.5, deathRate: 0.1, migRate: 0.2 }
+        { id: 'elephant_grass', icon: '🌾', name: 'หญ้าช้าง', type: 'P', eats: [], biome: ['savanna'], pop: 1000, maxPop: 5000, weight: 0.05, bEnergy: 40000, bToxin: 0.01, color: '#cddc39', birthRate: 0.5, deathRate: 0.2, migRate: 0 },
+        { id: 'acacia', icon: '🌳', name: 'ต้นอาเคเซีย', type: 'P', eats: [], biome: ['savanna'], pop: 600, maxPop: 1500, weight: 1000, bEnergy: 45000, bToxin: 0.02, color: '#2e7d32', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
+        { id: 'zebra', icon: '🦓', name: 'ม้าลาย', type: 'C', eats: ['elephant_grass'], biome: ['savanna'], pop: 200, maxPop: 800, weight: 300, bEnergy: 0, bToxin: 0, color: '#9e9e9e', birthRate: 0.15, deathRate: 0.1, migRate: 0.1 },
+        { id: 'giraffe', icon: '🦒', name: 'ยีราฟ', type: 'C', eats: ['acacia'], biome: ['savanna'], pop: 50, maxPop: 200, weight: 800, bEnergy: 0, bToxin: 0, color: '#ffb300', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
+        { id: 'lion', icon: '🦁', name: 'สิงโต', type: 'C', eats: ['zebra', 'giraffe'], biome: ['savanna'], pop: 10, maxPop: 40, weight: 190, bEnergy: 0, bToxin: 0, color: '#f57f17', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
+        { id: 'hyena', icon: '🐆', name: 'ไฮยีน่า', type: 'C', eats: ['zebra'], biome: ['savanna'], pop: 20, maxPop: 80, weight: 50, bEnergy: 0, bToxin: 0, color: '#5d4037', birthRate: 0.2, deathRate: 0.1, migRate: 0.05 },
+        { id: 'red_fire_ant', icon: '🐜', name: 'มดคันไฟ (Alien)', type: 'A', eats: ['elephant_grass', 'zebra'], biome: ['savanna'], pop: 500, maxPop: 5000, weight: 0.0001, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.5, deathRate: 0.1, migRate: 0.2 }
     ];
 
     let activeNodes = [];
@@ -530,61 +529,53 @@
         });
     }
 
-    // --- สมการจำลองประชากรที่อิงหลักนิเวศวิทยา (Logistic Growth + Lotka-Volterra) ---
     function simulateYear() {
         if(activeNodes.length === 0) return;
         currentYear++;
         document.getElementById('time-display').innerText = `⏳ ปีที่: ${currentYear}`;
         
         activeNodes.forEach(n => {
-            // 1. คำนวณการเติบโตตามธรรมชาติ (อิงขีดจำกัดความจุ - Carrying Capacity)
-            let growthMultiplier = (1 - (n.pop / n.maxPop)); // ลดลงเมื่อประชากรใกล้จุดสูงสุด
+            let growthMultiplier = (1 - (n.pop / n.maxPop)); 
             let births = n.pop * n.birthRate * Math.max(0, growthMultiplier);
-            
-            // 2. คำนวณการตายตามธรรมชาติ และ การอพยพ
             let deaths = n.pop * n.deathRate;
             let migration = n.pop * n.migRate * (Math.random() > 0.5 ? 1 : -0.5); 
-            
             n.tempPop = n.pop + births - deaths + migration;
         });
 
-        // 3. คำนวณการถูกล่า (Predation)
         activeNodes.forEach(predator => {
             if(predator.type === 'P' || predator.tempPop <= 0) return;
             
             let foodAcquired = false;
+            let totalFoodAvailable = 0;
+
             activeNodes.forEach(prey => {
                 if(predator.eats.includes(prey.refId) && prey.tempPop > 0) {
+                    totalFoodAvailable += prey.tempPop;
                     foodAcquired = true;
                     
-                    // ผู้ล่าและ Alien จะมีอัตราการล่าที่ไม่เท่ากัน
                     let huntEfficiency = predator.type === 'A' ? 0.35 : 0.15; 
-                    
-                    // คำนวณจำนวนเหยื่อที่ถูกล่า (แปรผันตามจำนวนผู้ล่าที่มี)
                     let eaten = Math.round(prey.tempPop * huntEfficiency * (predator.tempPop / (prey.maxPop * 0.1)));
                     
-                    // ป้องกันการกินเหยื่อจนติดลบในเทิร์นเดียว (เว้นแต่จะโอเวอร์โหลดจริงๆ)
                     eaten = Math.min(eaten, prey.tempPop * 0.95);
                     eaten = Math.max(0, eaten);
 
                     prey.tempPop -= eaten;
                     
-                    // แปลงเหยื่อที่กินได้กลับมาเป็นประชากรผู้ล่า (พลังงานถ่ายทอดสู่ลูกหลาน)
                     let energyConversion = (prey.weight / predator.weight) * 0.1;
                     predator.tempPop += eaten * energyConversion;
                 }
             });
 
-            // หากขาดแคลนอาหาร ผู้ล่าจะล้มตายอย่างรวดเร็ว
-            if(!foodAcquired) {
-                predator.tempPop -= predator.tempPop * 0.3; // อดตาย 30% ต่อปี
+            // เพิ่มลอจิกสภาวะขาดแคลนอาหารแบบชัดเจน (ตาย 60% หากไม่มีของกินเลย)
+            if(!foodAcquired || totalFoodAvailable === 0) {
+                predator.tempPop -= predator.tempPop * 0.60; 
+                if (predator.tempPop < 1) predator.tempPop = 0;
             }
         });
 
-        // 4. สรุปผลประชากร
         activeNodes.forEach(n => {
-            n.pop = Math.max(0, Math.floor(n.tempPop)); // ห้ามติดลบ
-            n.pop = Math.min(n.pop, n.maxPop); // ห้ามเกินความจุ
+            n.pop = Math.max(0, Math.floor(n.tempPop)); 
+            n.pop = Math.min(n.pop, n.maxPop); 
             n.history.push(n.pop);
         });
 
@@ -682,7 +673,6 @@
             generatePyramidHTML('มวล', levels, sortedLevels, 'mass', '#ff9800') +
             generatePyramidHTML('พลังงาน', levels, sortedLevels, 'energy', '#03a9f4') : 'ไม่มีข้อมูล';
 
-        // บังคับเรนเดอร์กราฟให้สมบูรณ์ก่อนดึงภาพ
         if(!chartInstance) updateChart();
         const chartBase64 = document.getElementById('popChart').toDataURL('image/png', 1.0);
 
