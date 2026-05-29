@@ -227,6 +227,7 @@
 <div id="report-area"></div>
 
 <script>
+    // ปิด Animation ทั่วไปของ Chart.js เพื่อความรวดเร็วในการเรนเดอร์ลง PDF
     Chart.defaults.animation = false;
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -239,7 +240,6 @@
         if (type === 'alien') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5); gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
     }
 
-    // อัปเดตประชากรตั้งต้นให้ <= 1000 และปรับ Max Pop
     const ORGANISMS = [
         // --- ทะเลบัวแดง ---
         { id: 'red_lotus', icon: '🌸', name: 'บัวแดง', type: 'P', eats: [], biome: ['red_lotus'], pop: 1000, maxPop: 3000, weight: 0.5, bEnergy: 20000, bToxin: 0.01, color: '#e91e63', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
@@ -429,7 +429,7 @@
         activeNodes.forEach(n => {
             adjList[n.id] = []; reverseAdjList[n.id] = [];
             n.energy = 0; n.heat = 0; n.toxin = 0; n.level = 0; n.biomass = n.pop * n.weight;
-            if (n.type === 'P') { n.energy = n.bEnergy * (n.pop / 100); n.toxin = n.bToxin; n.level = 1; }
+            if (n.type === 'P') { n.energy = n.bEnergy * (n.pop / 10); n.toxin = n.bToxin; n.level = 1; }
         });
 
         for(let step = 0; step < 5; step++) {
@@ -473,8 +473,8 @@
     function updateUI() {
         activeNodes.forEach(n => {
             const el = document.getElementById(n.id); if(!el) return;
-            let roleClass = n.pop === 0 ? 'lvl-extinct' : (n.level === 1 ? 'lvl-p' : (n.level === 2 ? 'lvl-c1' : (n.level === 3 ? 'lvl-c2' : 'lvl-c3')));
-            let roleText = n.pop === 0 ? 'สูญพันธุ์' : (n.level === 1 ? 'ผู้ผลิต (T1)' : (n.level === 0 ? 'ขาดอาหาร' : `ผู้บริโภค (T${n.level})`));
+            let roleClass = n.pop === 0 ? 'lvl-extinct' : (n.level === 1 ? 'lvl-p' : (n.level === 0 ? 'lvl-extinct' : (n.level === 2 ? 'lvl-c1' : 'lvl-c2')));
+            let roleText = n.pop === 0 ? 'สูญพันธุ์' : (n.level === 1 ? 'ผู้ผลิต (T1)' : (n.level === 0 ? 'ขาดอาหาร (Starving)' : `ผู้บริโภค (T${n.level})`));
 
             const existingInput = el.querySelector('.pop-input');
             const isFocused = existingInput && document.activeElement === existingInput;
@@ -487,11 +487,11 @@
                         <div class="role ${roleClass}">${roleText}</div>
                         <div class="pop-controls">
                             <button class="pop-btn decrease" onclick="adjustNodePop('${n.id}', -10)">-</button>
-                            <input type="number" class="pop-input" value="${n.pop}" onchange="setNodePop('${n.id}', this.value)" title="ระบุจำนวนและกด Enter หรือคลิกที่ว่าง">
+                            <input type="number" class="pop-input" value="${n.pop}" onchange="setNodePop('${n.id}', this.value)" title="ระบุจำนวนและกด Enter">
                             <button class="pop-btn increase" onclick="adjustNodePop('${n.id}', 10)">+</button>
                         </div>
                         <div class="data-grid">
-                            <div class="data-item"><span class="data-label">Biomass</span><span class="data-val val-mass">${n.biomass.toLocaleString(undefined,{maximumFractionDigits:0})} kg</span></div>
+                            <div class="data-item"><span class="data-label">Biomass</span><span class="data-val val-mass">${n.biomass.toLocaleString(undefined,{maximumFractionDigits:1})} kg</span></div>
                             <div class="data-item"><span class="data-label">สารพิษ</span><span class="data-val" style="color:var(--danger)">${n.toxin.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
                             <div class="data-item"><span class="data-label">พลังงาน</span><span class="data-val val-energy">${n.energy.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
                             <div class="data-item"><span class="data-label">สูญเสีย</span><span class="data-val val-heat">${n.heat.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
@@ -501,7 +501,7 @@
             } else {
                 el.querySelector('.role').className = `role ${roleClass}`;
                 el.querySelector('.role').innerText = roleText;
-                el.querySelectorAll('.data-val')[0].innerText = `${n.biomass.toLocaleString(undefined,{maximumFractionDigits:0})} kg`;
+                el.querySelectorAll('.data-val')[0].innerText = `${n.biomass.toLocaleString(undefined,{maximumFractionDigits:1})} kg`;
                 el.querySelectorAll('.data-val')[1].innerText = `${n.toxin.toLocaleString(undefined,{maximumFractionDigits:2})}`;
                 el.querySelectorAll('.data-val')[2].innerText = `${n.energy.toLocaleString(undefined,{maximumFractionDigits:0})}`;
                 el.querySelectorAll('.data-val')[3].innerText = `${n.heat.toLocaleString(undefined,{maximumFractionDigits:0})}`;
@@ -566,7 +566,6 @@
                 }
             });
 
-            // เพิ่มลอจิกสภาวะขาดแคลนอาหารแบบชัดเจน (ตาย 60% หากไม่มีของกินเลย)
             if(!foodAcquired || totalFoodAvailable === 0) {
                 predator.tempPop -= predator.tempPop * 0.60; 
                 if (predator.tempPop < 1) predator.tempPop = 0;
@@ -581,6 +580,30 @@
 
         recalculateEcosystem();
         if(chartInstance) updateChart();
+    }
+
+    // --- ฟังก์ชันวาดกราฟสำหรับดึงภาพลง PDF (แก้ปัญหากราฟหายเมื่อไม่ได้เปิดหน้าต่าง) ---
+    function getChartBase64ForPDF() {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 800; tempCanvas.height = 400;
+        const ctx = tempCanvas.getContext('2d');
+        const labels = Array.from({length: currentYear + 1}, (_, i) => `ปีที่ ${i}`);
+        const datasets = activeNodes.map(n => ({
+            label: `${n.icon} ${n.name}`, data: n.history,
+            borderColor: n.color, backgroundColor: n.color + '33',
+            tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0
+        }));
+
+        new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: datasets },
+            options: { 
+                animation: false, responsive: false, devicePixelRatio: 1,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'จำนวนประชากร' } } }, 
+                plugins: { legend: { position: 'right' } } 
+            }
+        });
+        return tempCanvas.toDataURL('image/png', 1.0);
     }
 
     function showGraph() {
@@ -673,8 +696,8 @@
             generatePyramidHTML('มวล', levels, sortedLevels, 'mass', '#ff9800') +
             generatePyramidHTML('พลังงาน', levels, sortedLevels, 'energy', '#03a9f4') : 'ไม่มีข้อมูล';
 
-        if(!chartInstance) updateChart();
-        const chartBase64 = document.getElementById('popChart').toDataURL('image/png', 1.0);
+        // เรียกฟังก์ชันวาดกราฟเบื้องหลัง เพื่อให้ได้ภาพสมบูรณ์เสมอ
+        const chartBase64 = getChartBase64ForPDF();
 
         let html = `
             <div style="font-family: 'Prompt', sans-serif;">
@@ -703,7 +726,7 @@
                 <td style="padding:8px; border:1px solid #ddd;">${n.icon} ${n.name}</td>
                 <td style="padding:8px; border:1px solid #ddd;">${n.pop===0?'สูญพันธุ์':(n.level===1?'ผู้ผลิต':`ผู้บริโภค T${n.level}`)}</td>
                 <td style="padding:8px; border:1px solid #ddd;">${n.pop.toLocaleString()}</td>
-                <td style="padding:8px; border:1px solid #ddd;">${n.biomass.toLocaleString()}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${n.biomass.toLocaleString(undefined,{maximumFractionDigits:1})}</td>
                 <td style="padding:8px; border:1px solid #ddd;">${n.energy.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
                 <td style="padding:8px; border:1px solid #ddd; color:${n.toxin>0?'red':'black'};">${n.toxin.toLocaleString(undefined,{maximumFractionDigits:2})}</td>
             </tr>`;
