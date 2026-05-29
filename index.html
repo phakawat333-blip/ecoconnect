@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EcoConnect by Kru Phakawat</title>
+    <!-- ไลบรารีสำหรับสร้าง PDF และ Chart -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -19,7 +20,7 @@
         body { 
             margin: 0; display: flex; flex-direction: column; height: 100vh; 
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            overflow: hidden; user-select: none; -webkit-user-select: none; color: #333;
+            overflow: hidden; user-select: none; color: #333; touch-action: none;
         }
 
         /* App Header & Status */
@@ -79,18 +80,22 @@
             position: absolute; top: 20px; right: 20px; background: var(--glass-bg);
             padding: 8px 12px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             z-index: 50; display: flex; align-items: center; gap: 10px; border: 1px solid #ddd;
+            cursor: default; /* ป้องกันเมาส์เป็นรูปมือเวลาอยู่บนแผงซูม */
         }
         .zoom-btn { background: white; border: 1px solid #bbb; border-radius: 6px; width: 30px; height: 30px; font-weight: bold; font-size: 1.2em; cursor: pointer; transition: 0.2s; }
         .zoom-btn:hover { background: #eee; }
         .zoom-btn:active { transform: scale(0.9); }
         .zoom-text { font-weight: bold; min-width: 50px; text-align: center; }
 
-        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: top left; transition: transform 0.05s linear; }
+        #canvas-container { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            transform-origin: top left; transition: transform 0.05s linear; 
+        }
 
         .node { 
             position: absolute; width: 230px; background: rgba(255, 255, 255, 0.95); 
             border: 2px solid #aaa; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            transition: box-shadow 0.2s, border-color 0.2s; z-index: 5; display: flex; flex-direction: column;
+            transition: border-color 0.2s; z-index: 5; display: flex; flex-direction: column;
             cursor: grab; backdrop-filter: blur(5px);
         }
         .node:active { cursor: grabbing; box-shadow: 0 15px 35px rgba(0,0,0,0.4); z-index: 1000 !important; }
@@ -147,7 +152,7 @@
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 900px; text-align: center; position: relative; max-height: 90vh; overflow-y: auto;}
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 900px; text-align: center; position: relative; max-height: 90vh; overflow-y: auto; cursor: default; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 2em; cursor: pointer; color: #555; }
         
         .pyramid-container { display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 20px; gap: 20px; }
@@ -159,4 +164,697 @@
         #time-display { position: absolute; top: 20px; left: 340px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; z-index: 15; font-size: 1.2em;}
 
         /* Report Area */
-        #report-area { display: none; background: white; padding: 20mm; color: black;
+        #report-area { display: none; background: white; padding: 20mm; color: black; }
+        .report-section { margin-bottom: 30px; page-break-inside: avoid; }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <h1>🌱 EcoConnect <span style="font-size: 0.6em; font-weight: normal;">Dynamics & Simulation</span></h1>
+    <div class="creator-info">
+        <div class="creator">พัฒนาสื่อโดย ครูภควัต สองเมือง</div>
+        <div class="school">รายวิชาชีววิทยาเพิ่มเติม ม.6</div>
+    </div>
+</div>
+
+<div id="status-bar"><span id="status-icon">🌍</span> <span id="status-text">ลากสิ่งมีชีวิตลงพื้นที่เพื่อสร้างระบบนิเวศ</span></div>
+<div id="time-display">⏳ ปีที่: 0</div>
+
+<div class="main-container">
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <select id="biome-select" onchange="filterBiome(this.value)">
+                <option value="red_lotus">🌸 ทะเลบัวแดง (อุดรธานี)</option>
+                <option value="rainforest">🌳 ป่าดิบชื้น</option>
+                <option value="marine">🌊 ทะเล</option>
+                <option value="desert">🏜️ ทะเลทราย</option>
+                <option value="savanna">🦁 ทุ่งหญ้าสะวันน่า</option>
+            </select>
+            <button class="alien-btn" onclick="toggleAlienMode()">⚠️ ปล่อย Alien Species</button>
+        </div>
+        <div id="organism-list"></div>
+    </div>
+
+    <div id="workspace">
+        <div class="zoom-panel">
+            <button class="zoom-btn" onclick="changeZoom(-0.1)">-</button>
+            <span class="zoom-text" id="zoom-level">100%</span>
+            <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
+            <button class="zoom-btn" style="width: auto; padding: 0 10px; font-size: 0.9em;" onclick="resetZoom()">Reset</button>
+        </div>
+
+        <div id="canvas-container">
+            <svg id="svg-canvas"><defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="rgba(100,100,100,0.8)" /></marker></defs></svg>
+        </div>
+
+        <div class="control-panel">
+            <button class="action-btn btn-sim" onclick="simulateYear()">⏩ ข้ามเวลา 1 ปี</button>
+            <button class="action-btn btn-graph" onclick="showGraph()">📈 ดูกราฟประชากร</button>
+            <button class="action-btn btn-pyramid" onclick="showPyramids()">🔺 พีระมิดนิเวศวิทยา</button>
+            <button class="action-btn btn-pdf" onclick="exportPDF()">📄 ส่งออก PDF</button>
+            <button class="action-btn btn-reset" onclick="resetBoard()">🗑️ ล้างกระดาน</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div id="pyramid-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('pyramid-modal')">&times;</span>
+        <h2>📊 พีระมิดทางนิเวศวิทยา ณ ปีที่ <span id="pyr-year">0</span></h2>
+        <div class="pyramid-container" id="pyramid-draw-area"></div>
+    </div>
+</div>
+
+<div id="graph-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('graph-modal')">&times;</span>
+        <h2>📈 กราฟการเปลี่ยนแปลงประชากร (Population Dynamics)</h2>
+        <div id="graph-container"><canvas id="popChart"></canvas></div>
+    </div>
+</div>
+
+<div id="report-area"></div>
+
+<script>
+    Chart.defaults.animation = false;
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        if (type === 'drop') { osc.type = 'sine'; osc.frequency.setValueAtTime(440, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+        if (type === 'alien') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5); gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
+    }
+
+    const ORGANISMS = [
+        // --- ทะเลบัวแดง ---
+        { id: 'red_lotus', icon: '🌸', name: 'บัวแดง', type: 'P', eats: [], biome: ['red_lotus'], pop: 1000, maxPop: 3000, weight: 0.5, bEnergy: 20000, bToxin: 0.01, color: '#e91e63', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
+        { id: 'hydrilla', icon: '🌿', name: 'สาหร่ายหางกระรอก', type: 'P', eats: [], biome: ['red_lotus'], pop: 1000, maxPop: 4000, weight: 0.05, bEnergy: 15000, bToxin: 0.02, color: '#4caf50', birthRate: 0.4, deathRate: 0.1, migRate: 0 },
+        { id: 'apple_snail', icon: '🐌', name: 'หอยเชอรี่ (Alien)', type: 'A', eats: ['red_lotus', 'hydrilla'], biome: ['red_lotus'], pop: 100, maxPop: 2000, weight: 0.05, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.2, deathRate: 0.05, migRate: 0.1 },
+        { id: 'dragonfly_nymph', icon: '🦗', name: 'ตัวอ่อนแมลงปอ', type: 'C', eats: ['hydrilla'], biome: ['red_lotus'], pop: 500, maxPop: 1500, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.5, deathRate: 0.2, migRate: 0.05 },
+        { id: 'minnow', icon: '🐟', name: 'ปลาซิว', type: 'C', eats: ['dragonfly_nymph', 'hydrilla'], biome: ['red_lotus'], pop: 300, maxPop: 1000, weight: 0.02, bEnergy: 0, bToxin: 0, color: '#03a9f4', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
+        { id: 'snakehead', icon: '🦈', name: 'ปลาช่อน', type: 'C', eats: ['minnow', 'dragonfly_nymph', 'apple_snail'], biome: ['red_lotus'], pop: 20, maxPop: 100, weight: 0.8, bEnergy: 0, bToxin: 0, color: '#607d8b', birthRate: 0.2, deathRate: 0.1, migRate: 0.02 },
+        { id: 'swamphen', icon: '🦤', name: 'นกอีโก้ง', type: 'C', eats: ['red_lotus', 'apple_snail', 'minnow'], biome: ['red_lotus'], pop: 10, maxPop: 50, weight: 1.2, bEnergy: 0, bToxin: 0, color: '#9c27b0', birthRate: 0.15, deathRate: 0.1, migRate: 0.2 },
+
+        // --- ป่าดิบชื้น ---
+        { id: 'yang_na', icon: '🌳', name: 'ต้นยางนา', type: 'P', eats: [], biome: ['rainforest'], pop: 500, maxPop: 1000, weight: 2000, bEnergy: 50000, bToxin: 0.005, color: '#2e7d32', birthRate: 0.05, deathRate: 0.02, migRate: 0 },
+        { id: 'wild_fig', icon: '🍒', name: 'ลูกไทร/ผลไม้ป่า', type: 'P', eats: [], biome: ['rainforest'], pop: 1000, maxPop: 3000, weight: 0.1, bEnergy: 20000, bToxin: 0.01, color: '#8bc34a', birthRate: 0.4, deathRate: 0.2, migRate: 0 },
+        { id: 'hornbill', icon: '🦤', name: 'นกเงือก', type: 'C', eats: ['wild_fig'], biome: ['rainforest'], pop: 50, maxPop: 150, weight: 2.5, bEnergy: 0, bToxin: 0, color: '#ff9800', birthRate: 0.1, deathRate: 0.05, migRate: 0.1 },
+        { id: 'macaque', icon: '🐒', name: 'ลิงกัง', type: 'C', eats: ['wild_fig', 'hornbill'], biome: ['rainforest'], pop: 100, maxPop: 300, weight: 8.0, bEnergy: 0, bToxin: 0, color: '#8d6e63', birthRate: 0.2, deathRate: 0.1, migRate: 0.05 },
+        { id: 'sambar', icon: '🦌', name: 'กวางป่า', type: 'C', eats: ['yang_na', 'wild_fig'], biome: ['rainforest'], pop: 60, maxPop: 200, weight: 150, bEnergy: 0, bToxin: 0, color: '#a1887f', birthRate: 0.15, deathRate: 0.08, migRate: 0.05 },
+        { id: 'tiger', icon: '🐅', name: 'เสือโคร่ง', type: 'C', eats: ['sambar', 'macaque'], biome: ['rainforest'], pop: 5, maxPop: 20, weight: 180, bEnergy: 0, bToxin: 0, color: '#ff5722', birthRate: 0.08, deathRate: 0.05, migRate: 0.02 },
+        { id: 'feral_pig', icon: '🐗', name: 'หมูป่า (Alien)', type: 'A', eats: ['wild_fig', 'yang_na'], biome: ['rainforest'], pop: 20, maxPop: 500, weight: 80, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.8, deathRate: 0.1, migRate: 0.1 },
+
+        // --- ทะเล ---
+        { id: 'phytoplankton', icon: '🦠', name: 'แพลงก์ตอนพืช', type: 'P', eats: [], biome: ['marine'], pop: 1000, maxPop: 5000, weight: 0.0001, bEnergy: 30000, bToxin: 0.02, color: '#00bcd4', birthRate: 0.9, deathRate: 0.4, migRate: 0.1 },
+        { id: 'seagrass', icon: '🌱', name: 'หญ้าทะเล', type: 'P', eats: [], biome: ['marine'], pop: 1000, maxPop: 3000, weight: 0.2, bEnergy: 25000, bToxin: 0.01, color: '#4caf50', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
+        { id: 'zooplankton', icon: '🦐', name: 'แพลงก์ตอนสัตว์', type: 'C', eats: ['phytoplankton'], biome: ['marine'], pop: 800, maxPop: 4000, weight: 0.0005, bEnergy: 0, bToxin: 0, color: '#ffb74d', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
+        { id: 'sea_turtle', icon: '🐢', name: 'เต่าตนุ', type: 'C', eats: ['seagrass'], biome: ['marine'], pop: 15, maxPop: 50, weight: 100, bEnergy: 0, bToxin: 0, color: '#388e3c', birthRate: 0.05, deathRate: 0.02, migRate: 0.05 },
+        { id: 'sardine', icon: '🐟', name: 'ปลาซาร์ดีน', type: 'C', eats: ['zooplankton', 'phytoplankton'], biome: ['marine'], pop: 400, maxPop: 2000, weight: 0.1, bEnergy: 0, bToxin: 0, color: '#1976d2', birthRate: 0.5, deathRate: 0.2, migRate: 0.2 },
+        { id: 'grouper', icon: '🐡', name: 'ปลาเก๋า', type: 'C', eats: ['sardine'], biome: ['marine'], pop: 50, maxPop: 200, weight: 15, bEnergy: 0, bToxin: 0, color: '#5d4037', birthRate: 0.15, deathRate: 0.1, migRate: 0.05 },
+        { id: 'shark', icon: '🦈', name: 'ฉลามครีบดำ', type: 'C', eats: ['grouper', 'sea_turtle'], biome: ['marine'], pop: 5, maxPop: 20, weight: 80, bEnergy: 0, bToxin: 0, color: '#455a64', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
+        { id: 'lionfish', icon: '🐠', name: 'ปลาปักเป้าสิงโต (Alien)', type: 'A', eats: ['sardine', 'zooplankton'], biome: ['marine'], pop: 10, maxPop: 500, weight: 1.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.0, deathRate: 0.05, migRate: 0.2 },
+
+        // --- ทะเลทราย ---
+        { id: 'cactus', icon: '🌵', name: 'กระบองเพชร', type: 'P', eats: [], biome: ['desert'], pop: 800, maxPop: 2000, weight: 5.0, bEnergy: 20000, bToxin: 0.01, color: '#689f38', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
+        { id: 'desert_shrub', icon: '🌿', name: 'พุ่มไม้หนาม', type: 'P', eats: [], biome: ['desert'], pop: 900, maxPop: 2500, weight: 2.0, bEnergy: 15000, bToxin: 0.02, color: '#afb42b', birthRate: 0.15, deathRate: 0.1, migRate: 0 },
+        { id: 'desert_beetle', icon: '🪲', name: 'แมลงปีกแข็งทะเลทราย', type: 'C', eats: ['desert_shrub'], biome: ['desert'], pop: 600, maxPop: 2000, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#3e2723', birthRate: 0.4, deathRate: 0.2, migRate: 0.05 },
+        { id: 'kangaroo_rat', icon: '🐁', name: 'หนูจิงโจ้', type: 'C', eats: ['cactus', 'desert_shrub', 'desert_beetle'], biome: ['desert'], pop: 200, maxPop: 800, weight: 0.15, bEnergy: 0, bToxin: 0, color: '#bcaaa4', birthRate: 0.3, deathRate: 0.15, migRate: 0.05 },
+        { id: 'rattlesnake', icon: '🐍', name: 'งูหางกระดิ่ง', type: 'C', eats: ['kangaroo_rat'], biome: ['desert'], pop: 40, maxPop: 150, weight: 1.5, bEnergy: 0, bToxin: 0, color: '#fbc02d', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
+        { id: 'desert_hawk', icon: '🦅', name: 'เหยี่ยวทะเลทราย', type: 'C', eats: ['rattlesnake', 'kangaroo_rat'], biome: ['desert'], pop: 10, maxPop: 50, weight: 2.0, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
+        { id: 'feral_cat', icon: '🐈', name: 'แมวจรจัด (Alien)', type: 'A', eats: ['kangaroo_rat', 'desert_hawk'], biome: ['desert'], pop: 5, maxPop: 100, weight: 4.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.6, deathRate: 0.1, migRate: 0.1 },
+
+        // --- สะวันน่า ---
+        { id: 'elephant_grass', icon: '🌾', name: 'หญ้าช้าง', type: 'P', eats: [], biome: ['savanna'], pop: 1000, maxPop: 5000, weight: 0.05, bEnergy: 40000, bToxin: 0.01, color: '#cddc39', birthRate: 0.5, deathRate: 0.2, migRate: 0 },
+        { id: 'acacia', icon: '🌳', name: 'ต้นอาเคเซีย', type: 'P', eats: [], biome: ['savanna'], pop: 600, maxPop: 1500, weight: 1000, bEnergy: 45000, bToxin: 0.02, color: '#2e7d32', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
+        { id: 'zebra', icon: '🦓', name: 'ม้าลาย', type: 'C', eats: ['elephant_grass'], biome: ['savanna'], pop: 200, maxPop: 800, weight: 300, bEnergy: 0, bToxin: 0, color: '#9e9e9e', birthRate: 0.15, deathRate: 0.1, migRate: 0.1 },
+        { id: 'giraffe', icon: '🦒', name: 'ยีราฟ', type: 'C', eats: ['acacia'], biome: ['savanna'], pop: 50, maxPop: 200, weight: 800, bEnergy: 0, bToxin: 0, color: '#ffb300', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
+        { id: 'lion', icon: '🦁', name: 'สิงโต', type: 'C', eats: ['zebra', 'giraffe'], biome: ['savanna'], pop: 10, maxPop: 40, weight: 190, bEnergy: 0, bToxin: 0, color: '#f57f17', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
+        { id: 'hyena', icon: '🐆', name: 'ไฮยีน่า', type: 'C', eats: ['zebra'], biome: ['savanna'], pop: 20, maxPop: 80, weight: 50, bEnergy: 0, bToxin: 0, color: '#5d4037', birthRate: 0.2, deathRate: 0.1, migRate: 0.05 },
+        { id: 'red_fire_ant', icon: '🐜', name: 'มดคันไฟ (Alien)', type: 'A', eats: ['elephant_grass', 'zebra'], biome: ['savanna'], pop: 500, maxPop: 5000, weight: 0.0001, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.5, deathRate: 0.1, migRate: 0.2 }
+    ];
+
+    let activeNodes = [];
+    let showAlien = false;
+    let currentYear = 0;
+    let chartInstance = null;
+    
+    // --- ระบบ Zoom & Pan กระดาน ---
+    let currentScale = 1.0; 
+    let panX = 0, panY = 0;
+    let isPanning = false, startPanX = 0, startPanY = 0;
+
+    const canvas = document.getElementById('canvas-container');
+    const svg = document.getElementById('svg-canvas');
+    const workspaceEl = document.getElementById('workspace');
+
+    function applyTransform() {
+        canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
+        document.getElementById('zoom-level').innerText = Math.round(currentScale * 100) + '%';
+        workspaceEl.style.backgroundPosition = `${panX}px ${panY}px`;
+        workspaceEl.style.backgroundSize = `${30 * currentScale}px ${30 * currentScale}px`;
+    }
+
+    function changeZoom(delta) {
+        currentScale += delta;
+        if (currentScale < 0.3) currentScale = 0.3; 
+        if (currentScale > 2.5) currentScale = 2.5; 
+        applyTransform();
+    }
+    
+    function resetZoom() { 
+        currentScale = 1.0; 
+        panX = 0; panY = 0;
+        applyTransform(); 
+    }
+
+    // เลื่อนกระดาน (Mouse & Touch)
+    workspaceEl.addEventListener('pointerdown', e => {
+        if (e.target.closest('.node') || e.target.closest('.control-panel') || e.target.closest('.zoom-panel')) return;
+        isPanning = true;
+        startPanX = e.clientX - panX;
+        startPanY = e.clientY - panY;
+    });
+    window.addEventListener('pointermove', e => {
+        if (!isPanning) return;
+        panX = e.clientX - startPanX;
+        panY = e.clientY - startPanY;
+        applyTransform();
+    });
+    window.addEventListener('pointerup', () => { isPanning = false; });
+    window.addEventListener('pointercancel', () => { isPanning = false; });
+
+    // ถ่างนิ้วซูม (Pinch-to-zoom) สำหรับแท็บเล็ต
+    let initialPinchDist = null;
+    let initialScale = 1;
+
+    workspaceEl.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+            isPanning = false;
+            initialPinchDist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            initialScale = currentScale;
+        }
+    }, {passive: false});
+
+    workspaceEl.addEventListener('touchmove', e => {
+        if (e.touches.length === 2) {
+            e.preventDefault(); 
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const scaleChange = dist / initialPinchDist;
+            currentScale = initialScale * scaleChange;
+            if (currentScale < 0.3) currentScale = 0.3;
+            if (currentScale > 2.5) currentScale = 2.5;
+            applyTransform();
+        }
+    }, {passive: false});
+    workspaceEl.addEventListener('touchend', e => { if (e.touches.length < 2) initialPinchDist = null; });
+
+    // ซูมด้วยลูกกลิ้งเมาส์ (Mouse Wheel)
+    workspaceEl.addEventListener('wheel', e => {
+        if (e.target.closest('.node')) return; 
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        changeZoom(delta);
+    }, {passive: false});
+
+
+    function toggleAlienMode() { showAlien = !showAlien; filterBiome(document.getElementById('biome-select').value); }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function filterBiome(biome) {
+        const list = document.getElementById('organism-list');
+        list.innerHTML = '';
+        let filtered = ORGANISMS.filter(o => o.biome.includes(biome));
+        if(!showAlien) filtered = filtered.filter(o => o.type !== 'A');
+
+        filtered.forEach(org => {
+            const el = document.createElement('div'); el.className = 'organism-item';
+            let tClass = org.type === 'P' ? 'tag-p' : (org.type === 'A' ? 'tag-a' : 'tag-c');
+            let tName = org.type === 'P' ? 'ผู้ผลิต' : (org.type === 'A' ? 'Alien' : 'ผู้บริโภค');
+            el.innerHTML = `<div style="display:flex; align-items:center;"><div class="org-icon">${org.icon}</div><div class="org-name">${org.name}</div></div><div class="type-tag ${tClass}">${tName}</div>`;
+            el.onclick = () => addNodeToWorkspace(org);
+            list.appendChild(el);
+        });
+    }
+
+    function addNodeToWorkspace(org) {
+        playSound(org.type === 'A' ? 'alien' : 'drop');
+        const id = 'node_' + Date.now();
+        
+        // คำนวณให้ลงตรงกลางหน้าจอ แม้กระดานจะโดนเลื่อน/ซูมไปแล้ว
+        const rect = workspaceEl.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const x = (centerX - 115 - panX) / currentScale + (Math.random()*60 - 30);
+        const y = (centerY - 100 - panY) / currentScale + (Math.random()*60 - 30);
+
+        let newNode = {
+            id: id, refId: org.id, name: org.name, icon: org.icon, type: org.type, eats: org.eats, color: org.color,
+            birthRate: org.birthRate, deathRate: org.deathRate, migRate: org.migRate,
+            pop: org.pop, basePop: org.pop, maxPop: org.maxPop, weight: org.weight, bEnergy: org.bEnergy, bToxin: org.bToxin,
+            energy: 0, heat: 0, toxin: 0, biomass: 0, level: 0, x: x, y: y,
+            history: Array(currentYear).fill(0)
+        };
+        newNode.history.push(newNode.pop);
+        activeNodes.push(newNode);
+
+        const el = document.createElement('div');
+        el.className = `node ${org.type === 'A' ? 'alien-node' : ''}`;
+        el.id = id; el.style.left = x + 'px'; el.style.top = y + 'px';
+        
+        makeDraggable(el, id);
+        canvas.appendChild(el);
+        recalculateEcosystem();
+    }
+
+    function setNodePop(nodeId, newVal) {
+        let node = activeNodes.find(n => n.id === nodeId);
+        if(!node) return;
+        
+        let newPop = Math.max(0, parseInt(newVal) || 0);
+        if(newPop === node.pop) return;
+
+        let oldPop = node.pop;
+        node.pop = newPop;
+
+        let fractionChange = 0;
+        if (oldPop > 0) { fractionChange = (newPop - oldPop) / oldPop; } 
+        else if (newPop > 0) { fractionChange = 1; }
+
+        applyRippleEffect(nodeId, fractionChange);
+        activeNodes.forEach(n => n.history[currentYear] = n.pop);
+        recalculateEcosystem();
+    }
+
+    function adjustNodePop(nodeId, percentChange) {
+        let node = activeNodes.find(n => n.id === nodeId);
+        if(!node) return;
+        let delta = Math.round(node.pop * (percentChange / 100));
+        if(delta === 0 && percentChange > 0) delta = 1;
+        let newPop = Math.max(0, node.pop + delta);
+        setNodePop(nodeId, newPop);
+    }
+
+    function applyRippleEffect(sourceId, fractionChange) {
+        if (fractionChange === 0) return;
+        const sourceNode = activeNodes.find(n => n.id === sourceId);
+        
+        activeNodes.forEach(other => {
+            if(other.id === sourceId) return;
+            if(other.eats.includes(sourceNode.refId)) {
+                let pDelta = Math.round(other.pop * (fractionChange * 0.5)); 
+                other.pop = Math.max(0, other.pop + pDelta);
+            }
+            if(sourceNode.eats.includes(other.refId)) {
+                let pDelta = Math.round(other.pop * (-fractionChange * 0.5));
+                other.pop = Math.max(0, other.pop + pDelta);
+            }
+        });
+    }
+
+    function makeDraggable(el, id) {
+        let isDragging = false, startX, startY, initX, initY;
+        el.addEventListener('pointerdown', e => {
+            if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+            e.stopPropagation(); // สำคัญ! ป้องกันไม่ให้ทะลุไปเลื่อนกระดาน
+            isDragging = true; startX = e.clientX; startY = e.clientY;
+            initX = el.offsetLeft; initY = el.offsetTop;
+            el.setPointerCapture(e.pointerId);
+        });
+        el.addEventListener('pointermove', e => {
+            if(!isDragging) return;
+            const node = activeNodes.find(n => n.id === id);
+            node.x = initX + (e.clientX - startX) / currentScale; 
+            node.y = initY + (e.clientY - startY) / currentScale;
+            el.style.left = node.x + 'px'; el.style.top = node.y + 'px';
+            drawConnections();
+        });
+        el.addEventListener('pointerup', e => { isDragging = false; el.releasePointerCapture(e.pointerId); });
+    }
+
+    function deleteNode(id) {
+        document.getElementById(id).remove();
+        activeNodes = activeNodes.filter(n => n.id !== id);
+        recalculateEcosystem();
+    }
+
+    function recalculateEcosystem() {
+        let edgesCount = 0; let isWeb = false;
+        let adjList = {}; let reverseAdjList = {};
+        
+        activeNodes.forEach(n => {
+            adjList[n.id] = []; reverseAdjList[n.id] = [];
+            n.energy = 0; n.heat = 0; n.toxin = 0; n.level = 0; n.biomass = n.pop * n.weight;
+            if (n.type === 'P') { n.energy = n.bEnergy * (n.pop / 10); n.toxin = n.bToxin; n.level = 1; }
+        });
+
+        for(let step = 0; step < 5; step++) {
+            activeNodes.forEach(consumer => {
+                if(consumer.type === 'P') return;
+                let totalE = 0; let maxToxin = 0; let maxLvl = 0; let eatsSmth = false;
+                
+                activeNodes.forEach(prey => {
+                    if(consumer.eats.includes(prey.refId) && prey.energy > 0 && prey.pop > 0) {
+                        eatsSmth = true;
+                        if(!adjList[prey.id].includes(consumer.id)) { adjList[prey.id].push(consumer.id); reverseAdjList[consumer.id].push(prey.id); edgesCount++; }
+                        totalE += prey.energy;
+                        if(prey.toxin > maxToxin) maxToxin = prey.toxin;
+                        if(prey.level > maxLvl) maxLvl = prey.level;
+                    }
+                });
+
+                if(eatsSmth && consumer.pop > 0) {
+                    consumer.energy = totalE * 0.1; 
+                    consumer.heat = totalE * 0.9;
+                    consumer.toxin = maxToxin * 10;
+                    consumer.level = maxLvl + 1;
+                } else {
+                    consumer.energy = 0; consumer.heat = 0; consumer.level = 0;
+                }
+            });
+        }
+
+        for(let key in adjList) if(adjList[key].length > 1) isWeb = true;
+        for(let key in reverseAdjList) if(reverseAdjList[key].length > 1) isWeb = true;
+
+        const statusEl = document.getElementById('status-bar'); const statusText = document.getElementById('status-text'); const statusIcon = document.getElementById('status-icon');
+        statusEl.className = '';
+        if(edgesCount === 0 && activeNodes.length > 0) { statusText.innerText = "สิ่งมีชีวิตยังไม่มีการกินกัน"; statusIcon.innerText = "🌱"; }
+        else if(isWeb) { statusText.innerText = "สายใยอาหาร (Food Web)"; statusIcon.innerText = "🕸️"; statusEl.classList.add('status-web'); }
+        else if(edgesCount > 0) { statusText.innerText = "ห่วงโซ่อาหาร (Food Chain)"; statusIcon.innerText = "🔗"; statusEl.classList.add('status-chain'); }
+        
+        updateUI();
+    }
+
+    function updateUI() {
+        activeNodes.forEach(n => {
+            const el = document.getElementById(n.id); if(!el) return;
+            let roleClass = n.pop === 0 ? 'lvl-extinct' : (n.level === 1 ? 'lvl-p' : (n.level === 0 ? 'lvl-extinct' : (n.level === 2 ? 'lvl-c1' : 'lvl-c2')));
+            let roleText = n.pop === 0 ? 'สูญพันธุ์' : (n.level === 1 ? 'ผู้ผลิต (T1)' : (n.level === 0 ? 'ขาดอาหาร (Starving)' : `ผู้บริโภค (T${n.level})`));
+
+            const existingInput = el.querySelector('.pop-input');
+            const isFocused = existingInput && document.activeElement === existingInput;
+
+            if (!isFocused) {
+                el.innerHTML = `
+                    <button class="delete-btn" onclick="deleteNode('${n.id}')">✕</button>
+                    <div class="node-content">
+                        <div class="node-header"><span class="icon">${n.icon}</span> <span class="name">${n.name}</span></div>
+                        <div class="role ${roleClass}">${roleText}</div>
+                        <div class="pop-controls">
+                            <button class="pop-btn decrease" onclick="adjustNodePop('${n.id}', -10)">-</button>
+                            <input type="number" class="pop-input" value="${n.pop}" onchange="setNodePop('${n.id}', this.value)" title="ระบุจำนวนและกด Enter">
+                            <button class="pop-btn increase" onclick="adjustNodePop('${n.id}', 10)">+</button>
+                        </div>
+                        <div class="data-grid">
+                            <div class="data-item"><span class="data-label">Biomass</span><span class="data-val val-mass">${n.biomass.toLocaleString(undefined,{maximumFractionDigits:1})} kg</span></div>
+                            <div class="data-item"><span class="data-label">สารพิษ</span><span class="data-val" style="color:var(--danger)">${n.toxin.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+                            <div class="data-item"><span class="data-label">พลังงาน</span><span class="data-val val-energy">${n.energy.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
+                            <div class="data-item"><span class="data-label">สูญเสีย</span><span class="data-val val-heat">${n.heat.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                el.querySelector('.role').className = `role ${roleClass}`;
+                el.querySelector('.role').innerText = roleText;
+                el.querySelectorAll('.data-val')[0].innerText = `${n.biomass.toLocaleString(undefined,{maximumFractionDigits:1})} kg`;
+                el.querySelectorAll('.data-val')[1].innerText = `${n.toxin.toLocaleString(undefined,{maximumFractionDigits:2})}`;
+                el.querySelectorAll('.data-val')[2].innerText = `${n.energy.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+                el.querySelectorAll('.data-val')[3].innerText = `${n.heat.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+            }
+        });
+        drawConnections();
+    }
+
+    function drawConnections() {
+        svg.innerHTML = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="rgba(100,100,100,0.8)" /></marker></defs>';
+        activeNodes.forEach(target => {
+            activeNodes.forEach(source => {
+                if(target.eats.includes(source.refId) && source.pop > 0 && target.pop > 0) {
+                    const elS = document.getElementById(source.id); const elT = document.getElementById(target.id);
+                    if(!elS || !elT) return;
+                    const sX = elS.offsetLeft + elS.offsetWidth/2; const sY = elS.offsetTop + elS.offsetHeight/2;
+                    const tX = elT.offsetLeft + elT.offsetWidth/2; const tY = elT.offsetTop + elT.offsetHeight/2;
+                    const angle = Math.atan2(tY - sY, tX - sX); const endX = tX - Math.cos(angle) * 115; const endY = tY - Math.sin(angle) * 115;
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", sX); line.setAttribute("y1", sY); line.setAttribute("x2", endX); line.setAttribute("y2", endY); line.setAttribute("class", "link-line"); svg.appendChild(line);
+                    const flowLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    flowLine.setAttribute("x1", sX); flowLine.setAttribute("y1", sY); flowLine.setAttribute("x2", endX); flowLine.setAttribute("y2", endY); flowLine.setAttribute("class", "link-flow"); svg.appendChild(flowLine);
+                }
+            });
+        });
+    }
+
+    function simulateYear() {
+        if(activeNodes.length === 0) return;
+        currentYear++;
+        document.getElementById('time-display').innerText = `⏳ ปีที่: ${currentYear}`;
+        
+        activeNodes.forEach(n => {
+            let growthMultiplier = (1 - (n.pop / n.maxPop)); 
+            let births = n.pop * n.birthRate * Math.max(0, growthMultiplier);
+            let deaths = n.pop * n.deathRate;
+            let migration = n.pop * n.migRate * (Math.random() > 0.5 ? 1 : -0.5); 
+            n.tempPop = n.pop + births - deaths + migration;
+        });
+
+        activeNodes.forEach(predator => {
+            if(predator.type === 'P' || predator.tempPop <= 0) return;
+            
+            let foodAcquired = false;
+            let totalFoodAvailable = 0;
+
+            activeNodes.forEach(prey => {
+                if(predator.eats.includes(prey.refId) && prey.tempPop > 0) {
+                    totalFoodAvailable += prey.tempPop;
+                    foodAcquired = true;
+                    
+                    let huntEfficiency = predator.type === 'A' ? 0.35 : 0.15; 
+                    let eaten = Math.round(prey.tempPop * huntEfficiency * (predator.tempPop / (prey.maxPop * 0.1)));
+                    
+                    eaten = Math.min(eaten, prey.tempPop * 0.95);
+                    eaten = Math.max(0, eaten);
+
+                    prey.tempPop -= eaten;
+                    
+                    let energyConversion = (prey.weight / predator.weight) * 0.1;
+                    predator.tempPop += eaten * energyConversion;
+                }
+            });
+
+            if(!foodAcquired || totalFoodAvailable === 0) {
+                predator.tempPop -= predator.tempPop * 0.60; 
+                if (predator.tempPop < 1) predator.tempPop = 0;
+            }
+        });
+
+        activeNodes.forEach(n => {
+            n.pop = Math.max(0, Math.floor(n.tempPop)); 
+            n.pop = Math.min(n.pop, n.maxPop); 
+            n.history.push(n.pop);
+        });
+
+        recalculateEcosystem();
+        if(chartInstance) updateChart();
+    }
+
+    function getChartBase64ForPDF() {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 800; tempCanvas.height = 400;
+        const ctx = tempCanvas.getContext('2d');
+        const labels = Array.from({length: currentYear + 1}, (_, i) => `ปีที่ ${i}`);
+        const datasets = activeNodes.map(n => ({
+            label: `${n.icon} ${n.name}`, data: n.history,
+            borderColor: n.color, backgroundColor: n.color + '33',
+            tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0
+        }));
+
+        new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: datasets },
+            options: { 
+                animation: false, responsive: false, devicePixelRatio: 1,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'จำนวนประชากร' } } }, 
+                plugins: { legend: { position: 'right' } } 
+            }
+        });
+        return tempCanvas.toDataURL('image/png', 1.0);
+    }
+
+    function showGraph() {
+        if(activeNodes.length === 0) return alert("กรุณาสร้างระบบนิเวศก่อนครับ");
+        document.getElementById('graph-modal').style.display = 'flex';
+        updateChart();
+    }
+
+    function updateChart() {
+        const ctx = document.getElementById('popChart').getContext('2d');
+        const labels = Array.from({length: currentYear + 1}, (_, i) => `ปีที่ ${i}`);
+        
+        const datasets = activeNodes.map(n => ({
+            label: `${n.icon} ${n.name}`, data: n.history,
+            borderColor: n.color, backgroundColor: n.color + '33',
+            tension: 0.3, fill: false, borderWidth: 2
+        }));
+
+        if(chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'line', data: { labels: labels, datasets: datasets },
+            options: { 
+                responsive: true, maintainAspectRatio: false, 
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'จำนวนประชากร' } } }, 
+                plugins: { legend: { position: 'right' } } 
+            }
+        });
+    }
+
+    function showPyramids() {
+        if(activeNodes.length === 0) return alert("กรุณาสร้างระบบนิเวศก่อนครับ");
+        document.getElementById('pyr-year').innerText = currentYear;
+        
+        let levels = {};
+        activeNodes.forEach(n => {
+            if(n.level > 0 && n.pop > 0) {
+                if(!levels[n.level]) levels[n.level] = { pop: 0, mass: 0, energy: 0 };
+                levels[n.level].pop += n.pop; levels[n.level].mass += n.biomass; levels[n.level].energy += n.energy;
+            }
+        });
+
+        const sortedLevels = Object.keys(levels).map(Number).sort((a,b)=>b-a);
+        const container = document.getElementById('pyramid-draw-area');
+        if(sortedLevels.length === 0) { container.innerHTML = "<p>ระบบนิเวศล่มสลาย</p>"; } 
+        else {
+            container.innerHTML = generatePyramidHTML('จำนวน (ตัว)', levels, sortedLevels, 'pop', '#4caf50') +
+                                  generatePyramidHTML('มวลชีวภาพ (kg)', levels, sortedLevels, 'mass', '#ff9800') +
+                                  generatePyramidHTML('พลังงาน (Joule)', levels, sortedLevels, 'energy', '#03a9f4');
+        }
+        document.getElementById('pyramid-modal').style.display = 'flex';
+    }
+
+    function generatePyramidHTML(title, dataObj, sortedKeys, dataKey, colorStr) {
+        let maxVal = Math.max(...Object.values(dataObj).map(d => d[dataKey]));
+        let html = `<div class="pyramid-box"><h3 style="margin-top:0;">${title}</h3>`;
+        sortedKeys.forEach(lvl => {
+            let val = dataObj[lvl][dataKey]; 
+            let width = Math.max(5, (val / maxVal) * 100);
+            let lvlName = lvl === 1 ? 'ผู้ผลิต' : `ผู้บริโภค T${lvl}`;
+            let displayVal = val.toLocaleString(undefined,{maximumFractionDigits:0});
+            
+            html += `
+            <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0;">
+                <div style="width: 45%; text-align: right; padding-right: 15px; font-size: 0.8em; font-weight: bold; color: #444; line-height: 1.2;">
+                    ${lvlName}<br><span style="font-weight:normal; font-size:0.9em; color:#777;">(${displayVal})</span>
+                </div>
+                <div style="width: 55%; display: flex; justify-content: center;">
+                    <div style="width: ${width}%; height: 26px; background: ${colorStr}; border-radius: 4px; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); transition: 0.3s;"></div>
+                </div>
+            </div>`;
+        });
+        html += `</div>`; return html;
+    }
+
+    function exportPDF() {
+        if(activeNodes.length === 0) return alert("กรุณาสร้างระบบนิเวศก่อนครับ");
+        const report = document.getElementById('report-area');
+        const statusText = document.getElementById('status-text').innerText;
+        
+        let levels = {};
+        activeNodes.forEach(n => {
+            if(n.level > 0 && n.pop > 0) {
+                if(!levels[n.level]) levels[n.level] = { pop: 0, mass: 0, energy: 0 };
+                levels[n.level].pop += n.pop; levels[n.level].mass += n.biomass; levels[n.level].energy += n.energy;
+            }
+        });
+        const sortedLevels = Object.keys(levels).map(Number).sort((a,b)=>b-a);
+        let pyrHtml = sortedLevels.length > 0 ? 
+            generatePyramidHTML('จำนวน', levels, sortedLevels, 'pop', '#4caf50') +
+            generatePyramidHTML('มวล', levels, sortedLevels, 'mass', '#ff9800') +
+            generatePyramidHTML('พลังงาน', levels, sortedLevels, 'energy', '#03a9f4') : 'ไม่มีข้อมูล';
+
+        const chartBase64 = getChartBase64ForPDF();
+
+        let html = `
+            <div style="font-family: 'Prompt', sans-serif;">
+                <h1 style="color:#2b5876; text-align:center; margin-bottom:5px;">รายงานการเปลี่ยนแปลงของประชากรในระบบนิเวศ</h1>
+                <h3 style="text-align:center; color:#555; margin-top:0;">รายวิชาชีววิทยาเพิ่มเติม ม.6</h3>
+                <div style="display:flex; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:10px;">
+                    <p><strong>สถานะ:</strong> <span style="color:#ab47bc;">${statusText}</span></p>
+                    <p><strong>ระยะเวลาจำลอง:</strong> ${currentYear} ปี</p>
+                </div>
+                
+                <div class="report-section">
+                    <h2 style="color:#1565c0; border-left: 5px solid #1565c0; padding-left:10px;">1. ตารางวิเคราะห์ประชากร ณ ปีที่ ${currentYear}</h2>
+                    <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+                        <tr style="background:#2b5876; color:white; text-align:left;">
+                            <th style="padding:8px; border:1px solid #ddd;">สิ่งมีชีวิต</th>
+                            <th style="padding:8px; border:1px solid #ddd;">บทบาท</th>
+                            <th style="padding:8px; border:1px solid #ddd;">จำนวน</th>
+                            <th style="padding:8px; border:1px solid #ddd;">Biomass (kg)</th>
+                            <th style="padding:8px; border:1px solid #ddd;">พลังงาน (J)</th>
+                            <th style="padding:8px; border:1px solid #ddd;">สารพิษ (ppm)</th>
+                        </tr>
+        `;
+        let sorted = [...activeNodes].sort((a,b) => a.level - b.level);
+        sorted.forEach(n => {
+            html += `<tr>
+                <td style="padding:8px; border:1px solid #ddd;">${n.icon} ${n.name}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${n.pop===0?'สูญพันธุ์':(n.level===1?'ผู้ผลิต':`ผู้บริโภค T${n.level}`)}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${n.pop.toLocaleString()}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${n.biomass.toLocaleString(undefined,{maximumFractionDigits:1})}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${n.energy.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+                <td style="padding:8px; border:1px solid #ddd; color:${n.toxin>0?'red':'black'};">${n.toxin.toLocaleString(undefined,{maximumFractionDigits:2})}</td>
+            </tr>`;
+        });
+        
+        html += `</table></div>
+                <div class="report-section">
+                    <h2 style="color:#e65100; border-left: 5px solid #e65100; padding-left:10px;">2. กราฟการเปลี่ยนแปลงประชากร (Population Dynamics)</h2>
+                    <div style="text-align:center;">
+                        <img src="${chartBase64}" style="width:100%; max-width:800px; height:auto; border:1px solid #ddd; padding:10px; border-radius:8px; page-break-inside: avoid;">
+                    </div>
+                </div>
+                <div class="report-section">
+                    <h2 style="color:#2e7d32; border-left: 5px solid #2e7d32; padding-left:10px;">3. พีระมิดทางนิเวศวิทยา (Ecological Pyramids)</h2>
+                    <div style="display:flex; flex-direction:column; gap:10px;">${pyrHtml}</div>
+                </div>
+                <div style="margin-top: 30px; text-align:right; font-size: 0.9em; color:#555;">
+                    <p>ประมวลผลโดย <b>EcoConnect Interactive Simulator</b></p>
+                    <p>พัฒนาสื่อโดย ครูภควัต สองเมือง</p>
+                </div>
+            </div>`;
+
+        report.innerHTML = html; report.style.display = 'block';
+        const btn = document.querySelector('.btn-pdf'); const oldText = btn.innerHTML;
+        btn.innerHTML = '⏳ กำลังสร้าง...';
+        
+        html2pdf().set({
+            margin: 10, filename: 'EcoConnect_Dynamics_Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).from(report).save().then(() => { report.style.display = 'none'; btn.innerHTML = oldText; });
+    }
+
+    function resetBoard() {
+        if(!confirm("ต้องการล้างกระดานและรีเซ็ตเวลาใช่หรือไม่?")) return;
+        activeNodes.forEach(n => document.getElementById(n.id).remove());
+        activeNodes = []; currentYear = 0;
+        document.getElementById('time-display').innerText = `⏳ ปีที่: 0`;
+        if(chartInstance) chartInstance.destroy();
+        svg.innerHTML = ''; resetZoom(); recalculateEcosystem();
+    }
+
+    filterBiome('red_lotus');
+</script>
+</body>
+</html>
