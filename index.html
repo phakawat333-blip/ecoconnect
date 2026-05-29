@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoConnect by Kru Phakawat</title>
+    <!-- ไลบรารีสำหรับสร้าง PDF และ Chart -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -208,6 +209,7 @@
     </div>
 </div>
 
+<!-- Modals -->
 <div id="pyramid-modal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeModal('pyramid-modal')">&times;</span>
@@ -240,13 +242,14 @@
         if (type === 'alien') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5); gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
     }
 
+    // อัปเดตประชากรตั้งต้นให้ <= 1000 และปรับ Max Pop
     const ORGANISMS = [
         // --- ทะเลบัวแดง ---
         { id: 'red_lotus', icon: '🌸', name: 'บัวแดง', type: 'P', eats: [], biome: ['red_lotus'], pop: 1000, maxPop: 3000, weight: 0.5, bEnergy: 20000, bToxin: 0.01, color: '#e91e63', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
         { id: 'hydrilla', icon: '🌿', name: 'สาหร่ายหางกระรอก', type: 'P', eats: [], biome: ['red_lotus'], pop: 1000, maxPop: 4000, weight: 0.05, bEnergy: 15000, bToxin: 0.02, color: '#4caf50', birthRate: 0.4, deathRate: 0.1, migRate: 0 },
         { id: 'apple_snail', icon: '🐌', name: 'หอยเชอรี่ (Alien)', type: 'A', eats: ['red_lotus', 'hydrilla'], biome: ['red_lotus'], pop: 100, maxPop: 2000, weight: 0.05, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.2, deathRate: 0.05, migRate: 0.1 },
         { id: 'dragonfly_nymph', icon: '🦗', name: 'ตัวอ่อนแมลงปอ', type: 'C', eats: ['hydrilla'], biome: ['red_lotus'], pop: 500, maxPop: 1500, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.5, deathRate: 0.2, migRate: 0.05 },
-        { id: 'minnow', icon: '🐟', name: 'ปลาซิวหน้าหัก', type: 'C', eats: ['dragonfly_nymph', 'hydrilla'], biome: ['red_lotus'], pop: 300, maxPop: 1000, weight: 0.02, bEnergy: 0, bToxin: 0, color: '#03a9f4', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
+        { id: 'minnow', icon: '🐟', name: 'ปลาซิว', type: 'C', eats: ['dragonfly_nymph', 'hydrilla'], biome: ['red_lotus'], pop: 300, maxPop: 1000, weight: 0.02, bEnergy: 0, bToxin: 0, color: '#03a9f4', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
         { id: 'snakehead', icon: '🦈', name: 'ปลาช่อน', type: 'C', eats: ['minnow', 'dragonfly_nymph', 'apple_snail'], biome: ['red_lotus'], pop: 20, maxPop: 100, weight: 0.8, bEnergy: 0, bToxin: 0, color: '#607d8b', birthRate: 0.2, deathRate: 0.1, migRate: 0.02 },
         { id: 'swamphen', icon: '🦤', name: 'นกอีโก้ง', type: 'C', eats: ['red_lotus', 'apple_snail', 'minnow'], biome: ['red_lotus'], pop: 10, maxPop: 50, weight: 1.2, bEnergy: 0, bToxin: 0, color: '#9c27b0', birthRate: 0.15, deathRate: 0.1, migRate: 0.2 },
 
