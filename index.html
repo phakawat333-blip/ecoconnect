@@ -2,537 +2,762 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoConnect by Kru Phakawat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #c2185b; --bg: #fce4ec; --toxin: #d32f2f; --energy: #1976d2; --pop: #388e3c; --heat: #e65100; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: var(--bg); overflow: hidden; user-select: none; -webkit-user-select: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
         
-        /* App Header */
-        .app-header { background: var(--primary); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 20; }
-        .app-header h1 { margin: 0; font-size: 1.2em; }
-        .app-header .creator-info { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.8em; }
-        .app-header .creator { font-weight: bold; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; margin-bottom: 2px; }
-        .app-header .email { opacity: 0.8; font-size: 0.9em; padding-right: 10px; }
+        :root {
+            --primary: #2b5876; --secondary: #4e4376; --accent: #00e676; --danger: #ff1744; --warning: #ffea00;
+            --glass-bg: rgba(255, 255, 255, 0.85); --glass-border: rgba(255, 255, 255, 0.3);
+        }
+
+        * { box-sizing: border-box; font-family: 'Prompt', sans-serif; }
+        
+        body { 
+            margin: 0; display: flex; flex-direction: column; height: 100vh; 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            overflow: hidden; user-select: none; color: #333;
+        }
+
+        /* App Header & Status */
+        .app-header { 
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); color: white; 
+            padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 20; border-bottom: 1px solid var(--glass-border);
+        }
+        .app-header h1 { margin: 0; font-size: 1.5em; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .creator-info { text-align: right; line-height: 1.2; }
+        .creator { font-weight: bold; color: var(--accent); font-size: 1.1em; }
+        .school { font-size: 0.8em; opacity: 0.9; }
+
+        #status-bar {
+            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            background: var(--glass-bg); padding: 10px 25px; border-radius: 30px;
+            font-weight: bold; font-size: 1.2em; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 15; border: 2px solid #ccc; transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+        }
+        .status-chain { border-color: #29b6f6 !important; color: #0277bd; }
+        .status-web { border-color: #ab47bc !important; color: #6a1b9a; }
 
         .main-container { display: flex; flex-grow: 1; overflow: hidden; position: relative; }
 
         /* Sidebar */
-        #sidebar { width: 280px; background: white; border-right: 2px solid #ddd; display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
-        .sidebar-header { padding: 15px; background: #eee; text-align: center; border-bottom: 1px solid #ccc; }
-        #biome-select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #aaa; font-family: inherit; font-size: 0.9em; outline: none; cursor: pointer; color: #333; font-weight: bold; }
-        .guide-text { font-size: 0.8em; color: #d32f2f; margin-top: 5px; font-weight: bold; }
-        
-        #organism-list { flex-grow: 1; overflow-y: auto; padding: 10px; }
-        
+        #sidebar { 
+            width: 320px; background: var(--glass-bg); backdrop-filter: blur(15px);
+            display: flex; flex-direction: column; z-index: 10; box-shadow: 5px 0 15px rgba(0,0,0,0.1); 
+            border-right: 1px solid var(--glass-border);
+        }
+        .sidebar-header { padding: 15px; background: rgba(0,0,0,0.05); text-align: center; border-bottom: 1px solid #ddd; }
+        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #aaa; font-size: 1em; outline: none; cursor: pointer; font-weight: bold; }
+        .alien-btn { margin-top: 10px; width: 100%; padding: 10px; background: #6200ea; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .alien-btn:hover { background: #3700b3; box-shadow: 0 0 15px #6200ea; }
+
+        #organism-list { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
         .organism-item { 
-            padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 6px; 
-            cursor: pointer; background: #fff; display: flex; justify-content: space-between; align-items: center;
-            transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; 
+            background: white; display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .organism-item:hover, .organism-item:active { border-color: var(--primary); background: #f8bbd0; transform: translateY(-2px); }
-        .type-tag { font-size: 0.75em; padding: 3px 6px; border-radius: 4px; color: white; font-weight: bold; }
-        .tag-p { background: #4caf50; } .tag-c { background: #ff9800; } 
+        .organism-item:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 5px 10px rgba(0,0,0,0.15); }
+        .org-icon { font-size: 1.5em; margin-right: 10px; }
+        .org-name { flex-grow: 1; font-weight: 600; }
+        .type-tag { font-size: 0.75em; padding: 4px 8px; border-radius: 20px; color: white; font-weight: bold; }
+        .tag-p { background: #43a047; } .tag-c { background: #f57c00; } .tag-a { background: #d50000; box-shadow: 0 0 8px red;}
 
-        /* Workspace & Zoom Container */
-        #workspace { flex-grow: 1; position: relative; background-image: radial-gradient(#d1d1d1 1px, transparent 1px); background-size: 20px 20px; overflow: hidden; touch-action: none; }
-        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: top left; transition: transform 0.2s ease-out; }
-
-        /* Zoom Controls (Top Right) */
-        .zoom-panel { position: absolute; top: 15px; right: 15px; display: flex; gap: 5px; z-index: 50; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid #ccc; }
-        .zoom-btn { background: white; border: 1px solid #aaa; border-radius: 4px; width: 32px; height: 32px; font-weight: bold; font-size: 1.2em; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #333; }
+        /* Workspace & Nodes */
+        #workspace { flex-grow: 1; position: relative; background-color: #fce4ec; background-image: radial-gradient(rgba(0,0,0,0.05) 2px, transparent 2px); background-size: 30px 30px; overflow: hidden; touch-action: none; }
+        
+        .zoom-panel {
+            position: absolute; top: 20px; right: 20px; background: var(--glass-bg);
+            padding: 8px 12px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 50; display: flex; align-items: center; gap: 10px; border: 1px solid #ddd;
+        }
+        .zoom-btn { background: white; border: 1px solid #bbb; border-radius: 6px; width: 30px; height: 30px; font-weight: bold; font-size: 1.2em; cursor: pointer; transition: 0.2s; }
         .zoom-btn:hover { background: #eee; }
-        .zoom-btn:active { background: #ddd; transform: scale(0.95); }
-        .zoom-label { display: flex; align-items: center; font-size: 0.85em; font-weight: bold; margin: 0 5px; min-width: 45px; justify-content: center; color: #555; }
-        
-        /* Node Card */
+        .zoom-btn:active { transform: scale(0.9); }
+        .zoom-text { font-weight: bold; min-width: 50px; text-align: center; }
+
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: top left; transition: transform 0.1s ease-out; }
+
         .node { 
-            position: absolute; width: 200px; background: white; border: 2px solid #444; 
-            border-radius: 12px; font-size: 0.85em; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            transition: box-shadow 0.2s; z-index: 5; display: flex; flex-direction: column;
-            cursor: grab;
+            position: absolute; width: 230px; background: rgba(255, 255, 255, 0.95); 
+            border: 2px solid #aaa; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: box-shadow 0.2s, border-color 0.2s; z-index: 5; display: flex; flex-direction: column;
+            cursor: grab; backdrop-filter: blur(5px);
         }
-        .node:active { cursor: grabbing; box-shadow: 0 6px 15px rgba(0,0,0,0.2); z-index: 1000 !important; }
+        .node:active { cursor: grabbing; box-shadow: 0 15px 35px rgba(0,0,0,0.4); z-index: 1000 !important; }
+        .node.alien-node { border-color: #d50000; box-shadow: 0 0 20px rgba(213, 0, 0, 0.4); }
+        .delete-btn { position: absolute; top: -10px; right: -10px; background: var(--danger); color: white; border: 2px solid white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; }
         
-        .delete-btn { position: absolute; top: -10px; right: -10px; background: red; color: white; border: 2px solid white; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; }
-        .delete-btn:hover { background: #b71c1c; transform: scale(1.1); }
+        .node-content { padding: 15px; pointer-events: none; } 
+        .node-content button, .node-content input { pointer-events: auto; } 
+        .node-header { display: flex; align-items: center; margin-bottom: 5px; justify-content: center;}
+        .node-header .icon { font-size: 1.8em; margin-right: 5px; }
+        .node .name { font-weight: bold; font-size: 1.2em; color: #222; }
+        .node .role { font-size: 0.8em; text-align: center; margin-bottom: 5px; font-weight: bold; background: #eee; padding: 3px; border-radius: 5px; }
         
-        .node-content { padding: 12px; pointer-events: none; } 
-        .node-content button { pointer-events: auto; } 
+        .pop-controls { display: flex; justify-content: space-between; align-items: center; background: #f0f0f0; border-radius: 8px; padding: 4px; margin-bottom: 10px; pointer-events: auto; border: 1px solid #ddd;}
+        .pop-btn { background: white; border: 1px solid #ccc; border-radius: 5px; width: 25px; height: 25px; cursor: pointer; font-weight: bold; font-size: 1.1em; display: flex; align-items: center; justify-content: center; color: #333; transition: 0.2s;}
+        .pop-btn:hover { background: #e0e0e0; }
+        .pop-btn.decrease { color: var(--danger); }
+        .pop-btn.increase { color: #43a047; }
         
-        .node .role { font-size: 0.75em; color: #555; text-align: center; margin-bottom: 5px; font-weight: bold; background: #eee; padding: 2px; border-radius: 4px; transition: background 0.3s, color 0.3s; }
-        .node .name { text-align: center; font-weight: bold; font-size: 1.1em; margin-bottom: 4px; color: #222; }
-        .node .eats-info { font-size: 0.7em; color: #666; text-align: center; font-style: italic; margin-bottom: 8px; line-height: 1.2; height: 2.4em; overflow: hidden; }
-        
-        /* Population Controls */
-        .pop-control { display: flex; justify-content: space-between; align-items: center; background: #e8f5e9; border-radius: 6px; padding: 4px 6px; margin-bottom: 8px; border: 1px solid #c8e6c9; pointer-events: auto; }
-        .pop-btn-group { display: flex; gap: 3px; }
-        .pop-btn { background: #4caf50; color: white; border: none; border-radius: 4px; height: 24px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; padding: 0 4px; font-family: inherit; }
-        .pop-btn:hover { background: #388e3c; }
-        .pop-btn:active { background: #2e7d32; transform: scale(0.95); }
-        .pop-val { font-weight: bold; color: var(--pop); font-size: 0.9em; text-align: center; flex-grow: 1; transition: color 0.3s; }
+        .pop-input { 
+            width: 80px; text-align: center; border: 1px solid #ccc; border-radius: 5px; 
+            font-weight: bold; font-family: inherit; font-size: 0.9em; padding: 2px 5px;
+            outline: none; transition: 0.2s; background: white; color: #111;
+        }
+        .pop-input:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(43, 88, 118, 0.5); }
+        .pop-input::-webkit-outer-spin-button, .pop-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .pop-input[type=number] { -moz-appearance: textfield; }
 
-        .node .data-line { display: flex; justify-content: space-between; margin-top: 2px; font-size: 0.8em; border-top: 1px dashed #eee; padding-top: 3px; }
-        .energy-val { color: var(--energy); font-weight: bold; }
-        .toxin-val { color: var(--toxin); font-weight: bold; }
-        .heat-val { color: var(--heat); font-weight: bold; font-size: 0.9em; }
+        .lvl-p { background: #e8f5e9 !important; color: #2e7d32; }
+        .lvl-c1 { background: #fff3e0 !important; color: #ef6c00; }
+        .lvl-c2 { background: #ffebee !important; color: #c62828; }
+        .lvl-c3 { background: #f3e5f5 !important; color: #6a1b9a; }
+        .lvl-extinct { background: #eceff1 !important; color: #546e7a; text-decoration: line-through; }
 
-        /* SVG Connections */
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.7em; background: #f9f9f9; padding: 8px; border-radius: 8px; border: 1px solid #eee; }
+        .data-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .data-label { color: #777; font-size: 0.9em; }
+        .data-val { font-weight: bold; font-size: 1.1em; }
+        .val-energy { color: #0277bd; } .val-heat { color: #e65100; } .val-mass { color: #558b2f; }
+
         svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: visible; }
-        .link-line { stroke: #555; stroke-width: 3; marker-end: url(#arrowhead); transition: stroke-width 0.3s; }
+        .link-line { stroke: rgba(100,100,100,0.6); stroke-width: 4; marker-end: url(#arrowhead); }
+        .link-flow { stroke: var(--warning); stroke-width: 2; stroke-dasharray: 10; animation: flow 1s linear infinite; }
+        @keyframes flow { to { stroke-dashoffset: -20; } }
 
         /* Action Panel */
-        .control-panel { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 10px; z-index: 50; }
-        button.action-btn { padding: 10px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-family: inherit; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; font-size: 0.9em; }
-        .btn-export { background: #1976d2; color: white; border: 1px solid #115293; }
-        .btn-export:hover { background: #115293; }
-        .btn-reset { background: #d32f2f; color: white; border: 1px solid #b71c1c; }
-        .btn-reset:hover { background: #b71c1c; }
+        .control-panel { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; z-index: 50; }
+        button.action-btn { padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.2s; font-size: 0.9em; display: flex; align-items: center; gap: 5px; }
+        .btn-sim { background: #2962ff; color: white; } .btn-sim:hover { background: #1565c0; }
+        .btn-graph { background: #aa00ff; color: white; } .btn-graph:hover { background: #6a1b9a; }
+        .btn-pyramid { background: #ff9100; color: white; } .btn-pyramid:hover { background: #ff6d00; }
+        .btn-pdf { background: #00c853; color: white; } .btn-pdf:hover { background: #009624; }
+        .btn-reset { background: var(--danger); color: white; } .btn-reset:hover { background: #b71c1c; }
 
-        @media (max-width: 768px) {
-            .main-container { flex-direction: column; }
-            #sidebar { width: 100%; height: 25vh; border-right: none; border-bottom: 2px solid #ddd; display: flex; flex-direction: row; }
-            .sidebar-header { width: 40%; border-bottom: none; border-right: 1px solid #ccc; padding: 10px; display: flex; flex-direction: column; justify-content: center;}
-            #organism-list { width: 60%; display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start; }
-            .organism-item { padding: 5px 8px; margin-bottom: 0; font-size: 0.8em; width: calc(50% - 15px); flex-direction: column; text-align: center; justify-content: center;}
-            .type-tag { margin-top: 3px; }
-            .zoom-panel { top: auto; bottom: 65px; right: 15px; } 
-        }
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 900px; text-align: center; position: relative; max-height: 90vh; overflow-y: auto;}
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 2em; cursor: pointer; color: #555; }
+        
+        .pyramid-container { display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 20px; gap: 20px; }
+        .pyramid-box { flex: 1; min-width: 320px; background: #f5f5f5; padding: 15px; border-radius: 10px; }
+        
+        #graph-container { width: 100%; height: 400px; margin-top: 20px; }
+        
+        /* Time Display */
+        #time-display { position: absolute; top: 20px; left: 340px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; z-index: 15; font-size: 1.2em;}
+
+        /* Report Area */
+        #report-area { display: none; background: white; padding: 20mm; color: black; }
+        .report-section { margin-bottom: 30px; page-break-inside: avoid; }
     </style>
 </head>
 <body>
 
 <div class="app-header">
-    <h1>🌱 EcoConnect <small>(Real-time Dynamics)</small></h1>
+    <h1>🌱 EcoConnect <span style="font-size: 0.6em; font-weight: normal;">Dynamics & Simulation</span></h1>
     <div class="creator-info">
-        <div class="creator">โดย ครูภควัต สองเมือง</div>
-        <div class="email">phakawat333@gmail.com</div>
+        <div class="creator">พัฒนาสื่อโดย ครูภควัต สองเมือง</div>
+        <div class="school">รายวิชาชีววิทยาเพิ่มเติม ม.6</div>
     </div>
 </div>
+
+<div id="status-bar"><span id="status-icon">🌍</span> <span id="status-text">ลากสิ่งมีชีวิตลงพื้นที่เพื่อสร้างระบบนิเวศ</span></div>
+<div id="time-display">⏳ ปีที่: 0</div>
 
 <div class="main-container">
     <div id="sidebar">
         <div class="sidebar-header">
             <select id="biome-select" onchange="filterBiome(this.value)">
-                <option value="red_lotus">🌸 ทะเลบัวแดง</option>
-                <option value="all">🌍 ทั้งหมด</option>
-                <option value="forest">🌳 ป่าไม้/ทุ่งหญ้า</option>
-                <option value="freshwater">🏞️ น้ำจืดทั่วไป</option>
-                <option value="marine">🌊 ทางทะเล</option>
+                <option value="red_lotus">🌸 ทะเลบัวแดง (อุดรธานี)</option>
+                <option value="rainforest">🌳 ป่าดิบชื้น</option>
+                <option value="marine">🌊 ทะเล</option>
+                <option value="desert">🏜️ ทะเลทราย</option>
+                <option value="savanna">🦁 ทุ่งหญ้าสะวันน่า</option>
             </select>
-            <div class="guide-text">👆 แตะที่ชื่อเพื่อเพิ่มลงกระดาน</div>
+            <button class="alien-btn" onclick="toggleAlienMode()">⚠️ ปล่อย Alien Species</button>
         </div>
         <div id="organism-list"></div>
     </div>
 
     <div id="workspace">
         <div class="zoom-panel">
-            <button class="zoom-btn" onclick="zoomOut()">-</button>
-            <div class="zoom-label" id="zoom-text">100%</div>
-            <button class="zoom-btn" onclick="zoomIn()">+</button>
-            <button class="zoom-btn" style="font-size: 0.8em; width: auto; padding: 0 8px;" onclick="zoomReset()">Reset</button>
+            <button class="zoom-btn" onclick="changeZoom(-0.1)">-</button>
+            <span class="zoom-text" id="zoom-level">100%</span>
+            <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
+            <button class="zoom-btn" style="width: auto; padding: 0 10px; font-size: 0.9em;" onclick="resetZoom()">Reset</button>
         </div>
 
         <div id="canvas-container">
-            <svg id="svg-canvas">
-                <defs>
-                    <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" fill="#555">
-                        <polygon points="0 0, 10 4, 0 8" />
-                    </marker>
-                </defs>
-            </svg>
+            <svg id="svg-canvas"><defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="rgba(100,100,100,0.8)" /></marker></defs></svg>
         </div>
 
         <div class="control-panel">
-            <button class="action-btn btn-export" onclick="exportCSV()">📥 ส่งออก (CSV)</button>
-            <button class="action-btn btn-reset" onclick="resetBoard(true)">🗑️ ล้างกระดาน</button>
+            <button class="action-btn btn-sim" onclick="simulateYear()">⏩ ข้ามเวลา 1 ปี</button>
+            <button class="action-btn btn-graph" onclick="showGraph()">📈 ดูกราฟประชากร</button>
+            <button class="action-btn btn-pyramid" onclick="showPyramids()">🔺 พีระมิดนิเวศวิทยา</button>
+            <button class="action-btn btn-pdf" onclick="exportPDF()">📄 ส่งออก PDF</button>
+            <button class="action-btn btn-reset" onclick="resetBoard()">🗑️ ล้างกระดาน</button>
         </div>
     </div>
 </div>
 
+<div id="pyramid-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('pyramid-modal')">&times;</span>
+        <h2>📊 พีระมิดทางนิเวศวิทยา ณ ปีที่ <span id="pyr-year">0</span></h2>
+        <div class="pyramid-container" id="pyramid-draw-area"></div>
+    </div>
+</div>
+
+<div id="graph-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('graph-modal')">&times;</span>
+        <h2>📈 กราฟการเปลี่ยนแปลงประชากร (Population Dynamics)</h2>
+        <div id="graph-container"><canvas id="popChart"></canvas></div>
+    </div>
+</div>
+
+<div id="report-area"></div>
+
 <script>
+    // ปิด Animation ของ Chart.js ชั่วคราวเพื่อให้แคปเจอร์ภาพลง PDF ได้ทันที
+    Chart.defaults.animation = false;
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        if (type === 'drop') { osc.type = 'sine'; osc.frequency.setValueAtTime(440, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+        if (type === 'alien') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5); gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
+    }
+
+    // เพิ่มพารามิเตอร์: birthRate (เกิด), deathRate (ตาย), migRate (อพยพ)
     const ORGANISMS = [
-        // ทะเลบัวแดง
-        { id: 'red_lotus', name: 'บัวแดง', type: 'P', eats: [], biomes: ['red_lotus'], basePop: 10000 },
-        { id: 'algae', name: 'สาหร่าย/จอกแหน', type: 'P', eats: [], biomes: ['freshwater', 'red_lotus'], basePop: 50000 },
-        { id: 'fw_phytoplankton', name: 'แพลงก์ตอนพืช', type: 'P', eats: [], biomes: ['freshwater', 'red_lotus'], basePop: 100000 },
-        { id: 'water_insect', name: 'แมลงน้ำ', type: 'C', eats: ['red_lotus', 'algae'], biomes: ['red_lotus', 'freshwater'], basePop: 5000 },
-        { id: 'apple_snail', name: 'หอยเชอรี่', type: 'C', eats: ['red_lotus', 'algae', 'grass'], biomes: ['red_lotus', 'freshwater'], basePop: 1500 },
-        { id: 'fw_zooplankton', name: 'แพลงก์ตอนสัตว์', type: 'C', eats: ['fw_phytoplankton', 'algae'], biomes: ['freshwater', 'red_lotus'], basePop: 10000 },
-        { id: 'minnow', name: 'ปลาซิว', type: 'C', eats: ['water_insect', 'fw_zooplankton'], biomes: ['red_lotus', 'freshwater'], basePop: 1000 },
-        { id: 'frog', name: 'กบ/เขียด', type: 'C', eats: ['water_insect', 'grasshopper'], biomes: ['forest', 'freshwater', 'red_lotus'], basePop: 200 },
-        { id: 'large_fish', name: 'ปลาช่อน', type: 'C', eats: ['minnow', 'frog', 'apple_snail'], biomes: ['freshwater', 'red_lotus'], basePop: 50 },
-        { id: 'water_fowl', name: 'นกเป็ดน้ำ', type: 'C', eats: ['red_lotus', 'minnow', 'apple_snail', 'water_insect'], biomes: ['red_lotus'], basePop: 80 },
-        { id: 'heron', name: 'นกกระยาง', type: 'C', eats: ['minnow', 'frog', 'large_fish', 'snake'], biomes: ['red_lotus', 'freshwater'], basePop: 20 },
-        { id: 'snake', name: 'งูน้ำ', type: 'C', eats: ['frog', 'minnow', 'rat'], biomes: ['forest', 'freshwater', 'red_lotus'], basePop: 15 },
+        // --- ทะเลบัวแดง ---
+        { id: 'red_lotus', icon: '🌸', name: 'บัวแดง', type: 'P', eats: [], biome: ['red_lotus'], pop: 50000, maxPop: 100000, weight: 0.5, bEnergy: 10000, bToxin: 0.01, color: '#e91e63', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
+        { id: 'hydrilla', icon: '🌿', name: 'สาหร่ายหางกระรอก', type: 'P', eats: [], biome: ['red_lotus'], pop: 100000, maxPop: 200000, weight: 0.05, bEnergy: 5000, bToxin: 0.02, color: '#4caf50', birthRate: 0.4, deathRate: 0.1, migRate: 0 },
+        { id: 'apple_snail', icon: '🐌', name: 'หอยเชอรี่ (Alien)', type: 'A', eats: ['red_lotus', 'hydrilla'], biome: ['red_lotus'], pop: 500, maxPop: 50000, weight: 0.05, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.2, deathRate: 0.05, migRate: 0.1 },
+        { id: 'dragonfly_nymph', icon: '🦗', name: 'ตัวอ่อนแมลงปอ', type: 'C', eats: ['hydrilla'], biome: ['red_lotus'], pop: 15000, maxPop: 40000, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.5, deathRate: 0.2, migRate: 0.05 },
+        { id: 'minnow', icon: '🐟', name: 'ปลาซิวหน้าหัก', type: 'C', eats: ['dragonfly_nymph', 'hydrilla'], biome: ['red_lotus'], pop: 8000, maxPop: 20000, weight: 0.02, bEnergy: 0, bToxin: 0, color: '#03a9f4', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
+        { id: 'snakehead', icon: '🦈', name: 'ปลาช่อน', type: 'C', eats: ['minnow', 'dragonfly_nymph', 'apple_snail'], biome: ['red_lotus'], pop: 300, maxPop: 1000, weight: 0.8, bEnergy: 0, bToxin: 0, color: '#607d8b', birthRate: 0.2, deathRate: 0.1, migRate: 0.02 },
+        { id: 'swamphen', icon: '🦤', name: 'นกอีโก้ง', type: 'C', eats: ['red_lotus', 'apple_snail', 'minnow'], biome: ['red_lotus'], pop: 150, maxPop: 500, weight: 1.2, bEnergy: 0, bToxin: 0, color: '#9c27b0', birthRate: 0.15, deathRate: 0.1, migRate: 0.2 },
 
-        // ป่าไม้ / ทุ่งหญ้า
-        { id: 'grass', name: 'หญ้า', type: 'P', eats: [], biomes: ['forest', 'red_lotus'], basePop: 20000 },
-        { id: 'corn', name: 'ข้าวโพด', type: 'P', eats: [], biomes: ['forest'], basePop: 5000 },
-        { id: 'rice', name: 'ข้าว', type: 'P', eats: [], biomes: ['forest'], basePop: 10000 },
-        { id: 'grasshopper', name: 'ตั๊กแตน', type: 'C', eats: ['grass', 'corn', 'rice'], biomes: ['forest'], basePop: 2000 },
-        { id: 'rabbit', name: 'กระต่าย', type: 'C', eats: ['grass'], biomes: ['forest'], basePop: 100 },
-        { id: 'rat', name: 'หนูพุก', type: 'C', eats: ['rice', 'corn', 'grasshopper', 'apple_snail'], biomes: ['forest', 'red_lotus'], basePop: 300 },
-        { id: 'hawk', name: 'เหยี่ยว', type: 'C', eats: ['snake', 'rabbit', 'rat', 'bird'], biomes: ['forest'], basePop: 5 },
-        { id: 'bird', name: 'นกกินแมลง', type: 'C', eats: ['grasshopper'], biomes: ['forest'], basePop: 150 },
+        // --- ป่าดิบชื้น ---
+        { id: 'yang_na', icon: '🌳', name: 'ต้นยางนา', type: 'P', eats: [], biome: ['rainforest'], pop: 1000, maxPop: 2000, weight: 2000, bEnergy: 80000, bToxin: 0.005, color: '#2e7d32', birthRate: 0.05, deathRate: 0.02, migRate: 0 },
+        { id: 'wild_fig', icon: '🍒', name: 'ลูกไทร/ผลไม้ป่า', type: 'P', eats: [], biome: ['rainforest'], pop: 10000, maxPop: 30000, weight: 0.1, bEnergy: 15000, bToxin: 0.01, color: '#8bc34a', birthRate: 0.4, deathRate: 0.2, migRate: 0 },
+        { id: 'hornbill', icon: '🦤', name: 'นกเงือก', type: 'C', eats: ['wild_fig'], biome: ['rainforest'], pop: 200, maxPop: 600, weight: 2.5, bEnergy: 0, bToxin: 0, color: '#ff9800', birthRate: 0.1, deathRate: 0.05, migRate: 0.1 },
+        { id: 'macaque', icon: '🐒', name: 'ลิงกัง', type: 'C', eats: ['wild_fig', 'hornbill'], biome: ['rainforest'], pop: 500, maxPop: 1500, weight: 8.0, bEnergy: 0, bToxin: 0, color: '#8d6e63', birthRate: 0.2, deathRate: 0.1, migRate: 0.05 },
+        { id: 'sambar', icon: '🦌', name: 'กวางป่า', type: 'C', eats: ['yang_na', 'wild_fig'], biome: ['rainforest'], pop: 300, maxPop: 1000, weight: 150, bEnergy: 0, bToxin: 0, color: '#a1887f', birthRate: 0.15, deathRate: 0.08, migRate: 0.05 },
+        { id: 'tiger', icon: '🐅', name: 'เสือโคร่ง', type: 'C', eats: ['sambar', 'macaque'], biome: ['rainforest'], pop: 10, maxPop: 30, weight: 180, bEnergy: 0, bToxin: 0, color: '#ff5722', birthRate: 0.08, deathRate: 0.05, migRate: 0.02 },
+        { id: 'feral_pig', icon: '🐗', name: 'หมูป่า (Alien)', type: 'A', eats: ['wild_fig', 'yang_na'], biome: ['rainforest'], pop: 50, maxPop: 5000, weight: 80, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.8, deathRate: 0.1, migRate: 0.1 },
 
-        // ทะเล
-        { id: 'm_phytoplankton', name: 'แพลงก์ตอนพืชทะเล', type: 'P', eats: [], biomes: ['marine'], basePop: 100000 },
-        { id: 'krill', name: 'คริลล์', type: 'C', eats: ['m_phytoplankton'], biomes: ['marine'], basePop: 20000 },
-        { id: 'sardine', name: 'ปลาซาร์ดีน', type: 'C', eats: ['krill', 'm_phytoplankton'], biomes: ['marine'], basePop: 1000 },
-        { id: 'shark', name: 'ฉลาม', type: 'C', eats: ['sardine'], biomes: ['marine'], basePop: 2 },
-        
-        { id: 'human', name: 'มนุษย์', type: 'C', eats: ['rice', 'large_fish', 'rabbit', 'apple_snail', 'red_lotus'], biomes: ['forest', 'freshwater', 'marine', 'red_lotus'], basePop: 1 }
+        // --- ทะเล ---
+        { id: 'phytoplankton', icon: '🦠', name: 'แพลงก์ตอนพืช', type: 'P', eats: [], biome: ['marine'], pop: 500000, maxPop: 1000000, weight: 0.0001, bEnergy: 100000, bToxin: 0.02, color: '#00bcd4', birthRate: 0.9, deathRate: 0.4, migRate: 0.1 },
+        { id: 'seagrass', icon: '🌱', name: 'หญ้าทะเล', type: 'P', eats: [], biome: ['marine'], pop: 80000, maxPop: 150000, weight: 0.2, bEnergy: 20000, bToxin: 0.01, color: '#4caf50', birthRate: 0.3, deathRate: 0.1, migRate: 0 },
+        { id: 'zooplankton', icon: '🦐', name: 'แพลงก์ตอนสัตว์', type: 'C', eats: ['phytoplankton'], biome: ['marine'], pop: 200000, maxPop: 500000, weight: 0.0005, bEnergy: 0, bToxin: 0, color: '#ffb74d', birthRate: 0.6, deathRate: 0.3, migRate: 0.1 },
+        { id: 'sea_turtle', icon: '🐢', name: 'เต่าตนุ', type: 'C', eats: ['seagrass'], biome: ['marine'], pop: 150, maxPop: 400, weight: 100, bEnergy: 0, bToxin: 0, color: '#388e3c', birthRate: 0.05, deathRate: 0.02, migRate: 0.05 },
+        { id: 'sardine', icon: '🐟', name: 'ปลาซาร์ดีน', type: 'C', eats: ['zooplankton', 'phytoplankton'], biome: ['marine'], pop: 50000, maxPop: 120000, weight: 0.1, bEnergy: 0, bToxin: 0, color: '#1976d2', birthRate: 0.5, deathRate: 0.2, migRate: 0.2 },
+        { id: 'grouper', icon: '🐡', name: 'ปลาเก๋า', type: 'C', eats: ['sardine'], biome: ['marine'], pop: 1000, maxPop: 3000, weight: 15, bEnergy: 0, bToxin: 0, color: '#5d4037', birthRate: 0.15, deathRate: 0.1, migRate: 0.05 },
+        { id: 'shark', icon: '🦈', name: 'ฉลามครีบดำ', type: 'C', eats: ['grouper', 'sea_turtle'], biome: ['marine'], pop: 50, maxPop: 150, weight: 80, bEnergy: 0, bToxin: 0, color: '#455a64', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
+        { id: 'lionfish', icon: '🐠', name: 'ปลาปักเป้าสิงโต (Alien)', type: 'A', eats: ['sardine', 'zooplankton'], biome: ['marine'], pop: 20, maxPop: 5000, weight: 1.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.0, deathRate: 0.05, migRate: 0.2 },
+
+        // --- ทะเลทราย ---
+        { id: 'cactus', icon: '🌵', name: 'กระบองเพชร', type: 'P', eats: [], biome: ['desert'], pop: 5000, maxPop: 10000, weight: 5.0, bEnergy: 15000, bToxin: 0.01, color: '#689f38', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
+        { id: 'desert_shrub', icon: '🌿', name: 'พุ่มไม้หนาม', type: 'P', eats: [], biome: ['desert'], pop: 8000, maxPop: 15000, weight: 2.0, bEnergy: 10000, bToxin: 0.02, color: '#afb42b', birthRate: 0.15, deathRate: 0.1, migRate: 0 },
+        { id: 'desert_beetle', icon: '🪲', name: 'แมลงปีกแข็งทะเลทราย', type: 'C', eats: ['desert_shrub'], biome: ['desert'], pop: 20000, maxPop: 50000, weight: 0.005, bEnergy: 0, bToxin: 0, color: '#3e2723', birthRate: 0.4, deathRate: 0.2, migRate: 0.05 },
+        { id: 'kangaroo_rat', icon: '🐁', name: 'หนูจิงโจ้', type: 'C', eats: ['cactus', 'desert_shrub', 'desert_beetle'], biome: ['desert'], pop: 3000, maxPop: 8000, weight: 0.15, bEnergy: 0, bToxin: 0, color: '#bcaaa4', birthRate: 0.3, deathRate: 0.15, migRate: 0.05 },
+        { id: 'rattlesnake', icon: '🐍', name: 'งูหางกระดิ่ง', type: 'C', eats: ['kangaroo_rat'], biome: ['desert'], pop: 200, maxPop: 600, weight: 1.5, bEnergy: 0, bToxin: 0, color: '#fbc02d', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
+        { id: 'desert_hawk', icon: '🦅', name: 'เหยี่ยวทะเลทราย', type: 'C', eats: ['rattlesnake', 'kangaroo_rat'], biome: ['desert'], pop: 40, maxPop: 100, weight: 2.0, bEnergy: 0, bToxin: 0, color: '#795548', birthRate: 0.05, deathRate: 0.05, migRate: 0.1 },
+        { id: 'feral_cat', icon: '🐈', name: 'แมวจรจัด (Alien)', type: 'A', eats: ['kangaroo_rat', 'desert_hawk'], biome: ['desert'], pop: 10, maxPop: 1000, weight: 4.0, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 0.6, deathRate: 0.1, migRate: 0.1 },
+
+        // --- สะวันน่า ---
+        { id: 'elephant_grass', icon: '🌾', name: 'หญ้าเนเปียร์/ช้าง', type: 'P', eats: [], biome: ['savanna'], pop: 300000, maxPop: 800000, weight: 0.05, bEnergy: 60000, bToxin: 0.01, color: '#cddc39', birthRate: 0.5, deathRate: 0.2, migRate: 0 },
+        { id: 'acacia', icon: '🌳', name: 'ต้นอาเคเซีย', type: 'P', eats: [], biome: ['savanna'], pop: 2000, maxPop: 5000, weight: 1000, bEnergy: 50000, bToxin: 0.02, color: '#2e7d32', birthRate: 0.1, deathRate: 0.05, migRate: 0 },
+        { id: 'zebra', icon: '🦓', name: 'ม้าลาย', type: 'C', eats: ['elephant_grass'], biome: ['savanna'], pop: 2500, maxPop: 6000, weight: 300, bEnergy: 0, bToxin: 0, color: '#9e9e9e', birthRate: 0.15, deathRate: 0.1, migRate: 0.1 },
+        { id: 'giraffe', icon: '🦒', name: 'ยีราฟ', type: 'C', eats: ['acacia'], biome: ['savanna'], pop: 500, maxPop: 1200, weight: 800, bEnergy: 0, bToxin: 0, color: '#ffb300', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
+        { id: 'lion', icon: '🦁', name: 'สิงโต', type: 'C', eats: ['zebra', 'giraffe'], biome: ['savanna'], pop: 80, maxPop: 200, weight: 190, bEnergy: 0, bToxin: 0, color: '#f57f17', birthRate: 0.1, deathRate: 0.05, migRate: 0.05 },
+        { id: 'hyena', icon: '🐆', name: 'ไฮยีน่า', type: 'C', eats: ['zebra'], biome: ['savanna'], pop: 150, maxPop: 400, weight: 50, bEnergy: 0, bToxin: 0, color: '#5d4037', birthRate: 0.2, deathRate: 0.1, migRate: 0.05 },
+        { id: 'red_fire_ant', icon: '🐜', name: 'มดคันไฟ (Alien)', type: 'A', eats: ['elephant_grass', 'zebra'], biome: ['savanna'], pop: 10000, maxPop: 1000000, weight: 0.0001, bEnergy: 0, bToxin: 0, color: '#d50000', birthRate: 1.5, deathRate: 0.1, migRate: 0.2 }
     ];
 
-    const listContainer = document.getElementById('organism-list');
-    const workspace = document.getElementById('workspace');
-    const canvasContainer = document.getElementById('canvas-container');
-    const svg = document.getElementById('svg-canvas');
-    const zoomText = document.getElementById('zoom-text');
     let activeNodes = [];
-    
-    // Zoom System
-    let currentScale = 1.0;
+    let showAlien = false;
+    let currentYear = 0;
+    let chartInstance = null;
+    let currentScale = 1.0; 
+    const canvas = document.getElementById('canvas-container');
+    const svg = document.getElementById('svg-canvas');
+
+    function changeZoom(delta) {
+        currentScale += delta;
+        if (currentScale < 0.4) currentScale = 0.4; 
+        if (currentScale > 2.0) currentScale = 2.0; 
+        applyZoom();
+    }
+    function resetZoom() { currentScale = 1.0; applyZoom(); }
     function applyZoom() {
-        canvasContainer.style.transform = `scale(${currentScale})`;
-        zoomText.innerText = Math.round(currentScale * 100) + '%';
+        canvas.style.transform = `scale(${currentScale})`;
+        document.getElementById('zoom-level').innerText = Math.round(currentScale * 100) + '%';
     }
-    function zoomIn() { if (currentScale < 2.0) { currentScale += 0.1; applyZoom(); } }
-    function zoomOut() { if (currentScale > 0.4) { currentScale -= 0.1; applyZoom(); } }
-    function zoomReset() { currentScale = 1.0; applyZoom(); }
 
-    function renderSidebar(biomeFilter) {
-        listContainer.innerHTML = ''; 
-        const filteredOrgs = biomeFilter === 'all' 
-            ? ORGANISMS 
-            : ORGANISMS.filter(org => org.biomes.includes(biomeFilter));
+    function toggleAlienMode() { showAlien = !showAlien; filterBiome(document.getElementById('biome-select').value); }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        filteredOrgs.forEach(org => {
-            const div = document.createElement('div');
-            div.className = 'organism-item';
-            div.innerHTML = `<span>${org.name}</span> <span class="type-tag ${org.type === 'P' ? 'tag-p' : 'tag-c'}">${org.type === 'P' ? 'ผู้ผลิต' : 'ผู้บริโภค'}</span>`;
-            
-            div.onclick = () => {
-                const rect = workspace.getBoundingClientRect();
-                const x = ((rect.width / 2) - 100 + (Math.random() * 40 - 20)) / currentScale;
-                const y = ((rect.height / 2) - 90 + (Math.random() * 40 - 20)) / currentScale;
-                createNode(x, y, org);
-            };
-            listContainer.appendChild(div);
+    function filterBiome(biome) {
+        const list = document.getElementById('organism-list');
+        list.innerHTML = '';
+        let filtered = ORGANISMS.filter(o => o.biome.includes(biome));
+        if(!showAlien) filtered = filtered.filter(o => o.type !== 'A');
+
+        filtered.forEach(org => {
+            const el = document.createElement('div'); el.className = 'organism-item';
+            let tClass = org.type === 'P' ? 'tag-p' : (org.type === 'A' ? 'tag-a' : 'tag-c');
+            let tName = org.type === 'P' ? 'ผู้ผลิต' : (org.type === 'A' ? 'Alien' : 'ผู้บริโภค');
+            el.innerHTML = `<div style="display:flex; align-items:center;"><div class="org-icon">${org.icon}</div><div class="org-name">${org.name}</div></div><div class="type-tag ${tClass}">${tName}</div>`;
+            el.onclick = () => addNodeToWorkspace(org);
+            list.appendChild(el);
         });
     }
 
-    function filterBiome(biome) { renderSidebar(biome); }
-    renderSidebar('red_lotus');
+    function addNodeToWorkspace(org) {
+        playSound(org.type === 'A' ? 'alien' : 'drop');
+        const id = 'node_' + Date.now();
+        const x = (window.innerWidth/2 - 150 + (Math.random()*100 - 50)) / currentScale;
+        const y = (window.innerHeight/2 - 100 + (Math.random()*100 - 50)) / currentScale;
 
-    function createNode(x, y, data) {
-        const nodeId = 'node-' + Date.now();
-        const nodeEl = document.createElement('div');
-        nodeEl.className = 'node';
-        nodeEl.id = nodeId;
-        nodeEl.style.left = Math.max(10, x) + 'px';
-        nodeEl.style.top = Math.max(10, y) + 'px';
+        let newNode = {
+            id: id, refId: org.id, name: org.name, icon: org.icon, type: org.type, eats: org.eats, color: org.color,
+            birthRate: org.birthRate, deathRate: org.deathRate, migRate: org.migRate,
+            pop: org.pop, basePop: org.pop, maxPop: org.maxPop, weight: org.weight, bEnergy: org.bEnergy, bToxin: org.bToxin,
+            energy: 0, heat: 0, toxin: 0, biomass: 0, level: 0, x: x, y: y,
+            history: Array(currentYear).fill(0)
+        };
+        newNode.history.push(newNode.pop);
+        activeNodes.push(newNode);
 
-        activeNodes.push({
-            nodeId: nodeId, orgId: data.id, name: data.name, type: data.type, eats: data.eats, 
-            basePop: data.basePop, population: data.basePop,
-            energy: 0, heatLost: 0, toxin: 0, levels: new Set()
+        const el = document.createElement('div');
+        el.className = `node ${org.type === 'A' ? 'alien-node' : ''}`;
+        el.id = id; el.style.left = x + 'px'; el.style.top = y + 'px';
+        
+        makeDraggable(el, id);
+        canvas.appendChild(el);
+        recalculateEcosystem();
+    }
+
+    function setNodePop(nodeId, newVal) {
+        let node = activeNodes.find(n => n.id === nodeId);
+        if(!node) return;
+        
+        let newPop = Math.max(0, parseInt(newVal) || 0);
+        if(newPop === node.pop) return;
+
+        let oldPop = node.pop;
+        node.pop = newPop;
+
+        let fractionChange = 0;
+        if (oldPop > 0) { fractionChange = (newPop - oldPop) / oldPop; } 
+        else if (newPop > 0) { fractionChange = 1; }
+
+        applyRippleEffect(nodeId, fractionChange);
+        activeNodes.forEach(n => n.history[currentYear] = n.pop);
+        recalculateEcosystem();
+    }
+
+    function adjustNodePop(nodeId, percentChange) {
+        let node = activeNodes.find(n => n.id === nodeId);
+        if(!node) return;
+        let delta = Math.round(node.pop * (percentChange / 100));
+        if(delta === 0 && percentChange > 0) delta = 1;
+        let newPop = Math.max(0, node.pop + delta);
+        setNodePop(nodeId, newPop);
+    }
+
+    function applyRippleEffect(sourceId, fractionChange) {
+        if (fractionChange === 0) return;
+        const sourceNode = activeNodes.find(n => n.id === sourceId);
+        
+        activeNodes.forEach(other => {
+            if(other.id === sourceId) return;
+            if(other.eats.includes(sourceNode.refId)) {
+                let pDelta = Math.round(other.pop * (fractionChange * 0.5)); 
+                other.pop = Math.max(0, other.pop + pDelta);
+            }
+            if(sourceNode.eats.includes(other.refId)) {
+                let pDelta = Math.round(other.pop * (-fractionChange * 0.5));
+                other.pop = Math.max(0, other.pop + pDelta);
+            }
         });
-
-        renderNodeContent(nodeEl, nodeId);
-        canvasContainer.appendChild(nodeEl);
-        
-        makeNodeDraggable(nodeEl, nodeId);
-        updateSystem();
     }
 
-    function renderNodeContent(nodeEl, nodeId) {
-        const data = activeNodes.find(n => n.nodeId === nodeId);
-        if(!data) return;
-
-        let levelText = 'ยังไม่มีอาหาร';
-        if (data.type === 'P') {
-            levelText = 'ผู้ผลิต (Producer)';
-        } else if (data.levels && data.levels.size > 0) {
-            const consumerLevels = Array.from(data.levels).map(l => l - 1).sort((a, b) => a - b);
-            levelText = `ผู้บริโภคอันดับ ${consumerLevels.join(', ')}`;
-        }
-
-        if (data.population === 0) levelText = 'สูญพันธุ์ (Extinct)'; 
-
-        let eatsText = data.type === 'P' ? 'สร้างอาหารเอง' : `อาหาร: ${data.eats.map(id => ORGANISMS.find(o => o.id === id)?.name || '').join(', ')}`;
-
-        nodeEl.innerHTML = `
-            <button class="delete-btn" onclick="deleteNode('${nodeId}', event)">✕</button>
-            <div class="node-content">
-                <div class="role" style="${data.population === 0 ? 'background: #ffcdd2; color: #b71c1c;' : ''}">${levelText}</div>
-                <div class="name">${data.name}</div>
-                <div class="eats-info">${eatsText}</div>
-                
-                <div class="pop-control">
-                    <div class="pop-btn-group">
-                        <button class="pop-btn" style="font-size: 0.65em;" onclick="adjustPop('${nodeId}', '-10%', event)">-10%</button>
-                        <button class="pop-btn" style="font-size: 1.1em; width: 22px;" onclick="adjustPop('${nodeId}', '-1', event)">-</button>
-                    </div>
-                    <span class="pop-val" style="${data.population === 0 ? 'color: red;' : ''}">${data.population.toLocaleString()} ตัว</span>
-                    <div class="pop-btn-group">
-                        <button class="pop-btn" style="font-size: 1.1em; width: 22px;" onclick="adjustPop('${nodeId}', '+1', event)">+</button>
-                        <button class="pop-btn" style="font-size: 0.65em;" onclick="adjustPop('${nodeId}', '+10%', event)">+10%</button>
-                    </div>
-                </div>
-
-                <div class="data-line"><span>รับพลังงาน:</span><span class="energy-val">${data.energy > 0 ? data.energy.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' J' : '0 J'}</span></div>
-                <div class="data-line"><span>สูญเสียความร้อน:</span><span class="heat-val">🔥 ${data.heatLost > 0 ? data.heatLost.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' J' : '0 J'}</span></div>
-                <div class="data-line" style="border-top:none; padding-top:0;"><span>สะสมสารพิษ:</span><span class="toxin-val">${data.toxin > 0 ? data.toxin.toLocaleString(undefined, {maximumFractionDigits: 2}) + ' ppm' : '0 ppm'}</span></div>
-            </div>
-        `;
-    }
-
-    function deleteNode(nodeId, event) {
-        event.stopPropagation();
-        document.getElementById(nodeId).remove();
-        activeNodes = activeNodes.filter(n => n.nodeId !== nodeId);
-        updateSystem();
-    }
-
-    // 🚨 หัวใจหลัก: ระบบ BFS Cascade Effect แบบ Real-time 🚨
-    function adjustPop(nodeId, command, event) {
-        event.stopPropagation();
-        const target = activeNodes.find(n => n.nodeId === nodeId);
-        if (!target) return;
-
-        const oldPop = target.population;
-        let delta = 0;
-
-        // คำนวณจำนวนที่จะเปลี่ยน
-        if (command === '-10%') {
-            delta = -Math.max(1, Math.round(oldPop * 0.1));
-        } else if (command === '+10%') {
-            delta = Math.max(1, Math.round((oldPop || 1) * 0.1));
-        } else if (command === '+1') {
-            delta = 1;
-        } else if (command === '-1') {
-            delta = -1;
-        }
-
-        const newPop = Math.max(0, oldPop + delta);
-        if (newPop === oldPop) return; // ไม่มีการเปลี่ยนแปลง
-        
-        target.population = newPop;
-        const initialRatio = oldPop === 0 ? (delta > 0 ? 1.5 : 1) : newPop / oldPop;
-
-        // คิวสำหรับการกระจายผลกระทบแบบลูกโซ่
-        let queue = [{ node: target, ratio: initialRatio }];
-        let visited = new Set([target.nodeId]);
-
-        while (queue.length > 0) {
-            let { node, ratio } = queue.shift();
-
-            activeNodes.forEach(other => {
-                if (visited.has(other.nodeId)) return;
-
-                let affected = false;
-                let nextRatio = 1;
-
-                // กรณีที่ 1: 'other' กิน 'node' (ผู้ล่าได้รับผลกระทบทางตรง) -> เหยื่อเพิ่ม ผู้ล่าเพิ่ม
-                if (other.eats.includes(node.orgId)) {
-                    affected = true;
-                    nextRatio = 1 + (ratio - 1) * 0.5; // ถ่ายทอดผลกระทบ 50% ต่อ 1 ลำดับขั้น
-                }
-                // กรณีที่ 2: 'node' กิน 'other' (เหยื่อได้รับผลกระทบทางอ้อม) -> ผู้ล่าเพิ่ม เหยื่อต้องลดลง
-                else if (node.eats.includes(other.orgId)) {
-                    affected = true;
-                    nextRatio = 1 - (ratio - 1) * 0.5; // ถ่ายทอดผลกระทบแบบผกผัน
-                }
-
-                if (affected) {
-                    nextRatio = Math.max(0, nextRatio); // ป้องกันค่าติดลบ
-                    other.population = Math.max(0, Math.round(other.population * nextRatio));
-                    visited.add(other.nodeId);
-                    queue.push({ node: other, ratio: nextRatio });
-                }
-            });
-        }
-
-        updateSystem();
-    }
-
-    function makeNodeDraggable(el, nodeId) {
-        let isDragging = false;
-        let startX, startY, initialLeft, initialTop;
-
-        el.addEventListener('pointerdown', (e) => {
-            if (e.target.tagName === 'BUTTON') return;
-            isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            initialLeft = el.offsetLeft;
-            initialTop = el.offsetTop;
+    function makeDraggable(el, id) {
+        let isDragging = false, startX, startY, initX, initY;
+        el.addEventListener('pointerdown', e => {
+            if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+            isDragging = true; startX = e.clientX; startY = e.clientY;
+            initX = el.offsetLeft; initY = el.offsetTop;
             el.setPointerCapture(e.pointerId);
         });
-
-        el.addEventListener('pointermove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault(); 
-            const dx = (e.clientX - startX) / currentScale;
-            const dy = (e.clientY - startY) / currentScale;
-            el.style.left = (initialLeft + dx) + 'px';
-            el.style.top = (initialTop + dy) + 'px';
-            updateSystem(); 
+        el.addEventListener('pointermove', e => {
+            if(!isDragging) return;
+            const node = activeNodes.find(n => n.id === id);
+            node.x = initX + (e.clientX - startX) / currentScale; 
+            node.y = initY + (e.clientY - startY) / currentScale;
+            el.style.left = node.x + 'px'; el.style.top = node.y + 'px';
+            drawConnections();
         });
-
-        el.addEventListener('pointerup', (e) => {
-            if (isDragging) {
-                isDragging = false;
-                el.releasePointerCapture(e.pointerId);
-            }
-        });
-        
-        el.addEventListener('pointercancel', (e) => {
-            if (isDragging) {
-                isDragging = false;
-                el.releasePointerCapture(e.pointerId);
-            }
-        });
+        el.addEventListener('pointerup', e => { isDragging = false; el.releasePointerCapture(e.pointerId); });
     }
 
-    function updateSystem() {
-        svg.innerHTML = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" fill="#555"><polygon points="0 0, 10 4, 0 8" /></marker></defs>';
+    function deleteNode(id) {
+        document.getElementById(id).remove();
+        activeNodes = activeNodes.filter(n => n.id !== id);
+        recalculateEcosystem();
+    }
 
+    function recalculateEcosystem() {
+        let edgesCount = 0; let isWeb = false;
+        let adjList = {}; let reverseAdjList = {};
+        
         activeNodes.forEach(n => {
-            if (n.type === 'P') {
-                n.energy = n.population * 10; 
-                n.heatLost = 0; 
-                n.toxin = n.population > 0 ? 0.01 : 0;
-                n.levels = new Set([1]); 
-            } else {
-                n.energy = 0; 
-                n.heatLost = 0;
-                n.toxin = 0; 
-                n.levels = new Set(); 
-            }
+            adjList[n.id] = []; reverseAdjList[n.id] = [];
+            n.energy = 0; n.heat = 0; n.toxin = 0; n.level = 0; n.biomass = n.pop * n.weight;
+            if (n.type === 'P') { n.energy = n.bEnergy * (n.pop / 100); n.toxin = n.bToxin; n.level = 1; }
         });
 
-        for (let step = 0; step < 5; step++) {
-            activeNodes.forEach(target => {
-                if (target.type === 'P') return;
-
-                let consumedEnergy = 0;
-                let maxPreyToxin = 0;
-                let newLevels = new Set(target.levels);
-
-                activeNodes.forEach(source => {
-                    if (target.eats.includes(source.orgId) && source.energy > 0) {
-                        consumedEnergy += source.energy; 
-                        if (source.toxin > maxPreyToxin) maxPreyToxin = source.toxin;
-                        source.levels.forEach(lvl => newLevels.add(lvl + 1));
+        for(let step = 0; step < 5; step++) {
+            activeNodes.forEach(consumer => {
+                if(consumer.type === 'P') return;
+                let totalE = 0; let maxToxin = 0; let maxLvl = 0; let eatsSmth = false;
+                
+                activeNodes.forEach(prey => {
+                    if(consumer.eats.includes(prey.refId) && prey.energy > 0 && prey.pop > 0) {
+                        eatsSmth = true;
+                        if(!adjList[prey.id].includes(consumer.id)) { adjList[prey.id].push(consumer.id); reverseAdjList[consumer.id].push(prey.id); edgesCount++; }
+                        totalE += prey.energy;
+                        if(prey.toxin > maxToxin) maxToxin = prey.toxin;
+                        if(prey.level > maxLvl) maxLvl = prey.level;
                     }
                 });
 
-                if (consumedEnergy > 0 && target.population > 0) {
-                    let popRatio = target.population / target.basePop;
-                    
-                    target.energy = (consumedEnergy * 0.1) * popRatio;
-                    target.heatLost = (consumedEnergy * 0.9) * popRatio; 
-                    
-                    target.toxin = maxPreyToxin * 10;
-                    target.levels = newLevels; 
+                if(eatsSmth && consumer.pop > 0) {
+                    consumer.energy = totalE * 0.1; 
+                    consumer.heat = totalE * 0.9;
+                    consumer.toxin = maxToxin * 10;
+                    consumer.level = maxLvl + 1;
+                } else {
+                    consumer.energy = 0; consumer.heat = 0; consumer.level = 0;
                 }
             });
         }
 
-        activeNodes.forEach(target => {
-            const targetEl = document.getElementById(target.nodeId);
-            if (!targetEl) return;
+        for(let key in adjList) if(adjList[key].length > 1) isWeb = true;
+        for(let key in reverseAdjList) if(reverseAdjList[key].length > 1) isWeb = true;
 
-            renderNodeContent(targetEl, target.nodeId);
-
-            activeNodes.forEach(source => {
-                if (target.eats.includes(source.orgId) && source.energy > 0 && target.population > 0) {
-                    const sourceEl = document.getElementById(source.nodeId);
-                    drawLink(sourceEl, targetEl);
-                }
-            });
-        });
+        const statusEl = document.getElementById('status-bar'); const statusText = document.getElementById('status-text'); const statusIcon = document.getElementById('status-icon');
+        statusEl.className = '';
+        if(edgesCount === 0 && activeNodes.length > 0) { statusText.innerText = "สิ่งมีชีวิตยังไม่มีการกินกัน"; statusIcon.innerText = "🌱"; }
+        else if(isWeb) { statusText.innerText = "สายใยอาหาร (Food Web)"; statusIcon.innerText = "🕸️"; statusEl.classList.add('status-web'); }
+        else if(edgesCount > 0) { statusText.innerText = "ห่วงโซ่อาหาร (Food Chain)"; statusIcon.innerText = "🔗"; statusEl.classList.add('status-chain'); }
+        
+        updateUI();
     }
 
-    function drawLink(sourceEl, targetEl) {
-        const sX = sourceEl.offsetLeft + sourceEl.offsetWidth / 2;
-        const sY = sourceEl.offsetTop + sourceEl.offsetHeight / 2;
-        const tX = targetEl.offsetLeft + targetEl.offsetWidth / 2;
-        const tY = targetEl.offsetTop + targetEl.offsetHeight / 2;
-        
-        const tW = targetEl.offsetWidth;
-        const tH = targetEl.offsetHeight;
-        
-        const arrow = calculateIntersection(sX, sY, tX, tY, tW, tH);
-        if(!arrow) return;
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('class', 'link-line');
-        line.setAttribute('x1', sX);
-        line.setAttribute('y1', sY);
-        line.setAttribute('x2', arrow.x);
-        line.setAttribute('y2', arrow.y);
-        svg.appendChild(line);
-    }
-    
-    function calculateIntersection(sX, sY, tX, tY, tW, tH) {
-        const dx = tX - sX;
-        const dy = tY - sY;
-        
-        if (dx === 0 && dy === 0) return null;
-        
-        const padding = 8;
-        const halfWidth = (tW / 2) + padding;
-        const halfHeight = (tH / 2) + padding;
-        
-        const yRatio = (dy > 0 ? (tY - halfHeight - sY) : (tY + halfHeight - sY)) / dy;
-        const xAtY = sX + yRatio * dx;
-        
-        const xRatio = (dx > 0 ? (tX - halfWidth - sX) : (tX + halfWidth - sX)) / dx;
-        const yAtX = sY + xRatio * dy;
-        
-        if (Math.abs(xAtY - tX) <= halfWidth) {
-             return {x: xAtY, y: sY + yRatio * dy}; 
-        } else if (Math.abs(yAtX - tY) <= halfHeight) {
-             return {x: sX + xRatio * dx, y: yAtX}; 
-        } else {
-             return {x: tX, y: tY}; 
-        }
-    }
-
-    function resetBoard(askConfirm) {
-        if (askConfirm && !confirm("ต้องการล้างกระดานทั้งหมดใช่หรือไม่?")) return;
-        document.querySelectorAll('.node').forEach(node => node.remove());
-        activeNodes = [];
-        updateSystem();
-        zoomReset(); 
-    }
-
-    function exportCSV() {
-        if (activeNodes.length === 0) {
-            alert("กรุณาสร้างสายใยอาหารก่อนดาวน์โหลดข้อมูลครับ");
-            return;
-        }
-        let csv = "Name,Role,ConsumerLevels,Population,ReceivedEnergy(J),HeatLost(J),Toxin(ppm)\n";
+    function updateUI() {
         activeNodes.forEach(n => {
-            let role = n.type === 'P' ? 'Producer' : 'Consumer';
-            let levelsStr = n.type === 'P' ? '0' : Array.from(n.levels).map(l => l - 1).sort((a,b)=>a-b).join('-');
-            if(n.population === 0) levelsStr = 'Extinct';
+            const el = document.getElementById(n.id); if(!el) return;
+            let roleClass = n.pop === 0 ? 'lvl-extinct' : (n.level === 1 ? 'lvl-p' : (n.level === 2 ? 'lvl-c1' : (n.level === 3 ? 'lvl-c2' : 'lvl-c3')));
+            let roleText = n.pop === 0 ? 'สูญพันธุ์' : (n.level === 1 ? 'ผู้ผลิต (T1)' : (n.level === 0 ? 'ขาดอาหาร' : `ผู้บริโภค (T${n.level})`));
+
+            const existingInput = el.querySelector('.pop-input');
+            const isFocused = existingInput && document.activeElement === existingInput;
+
+            if (!isFocused) {
+                el.innerHTML = `
+                    <button class="delete-btn" onclick="deleteNode('${n.id}')">✕</button>
+                    <div class="node-content">
+                        <div class="node-header"><span class="icon">${n.icon}</span> <span class="name">${n.name}</span></div>
+                        <div class="role ${roleClass}">${roleText}</div>
+                        <div class="pop-controls">
+                            <button class="pop-btn decrease" onclick="adjustNodePop('${n.id}', -10)">-</button>
+                            <input type="number" class="pop-input" value="${n.pop}" onchange="setNodePop('${n.id}', this.value)" title="ระบุจำนวนและกด Enter หรือคลิกที่ว่าง">
+                            <button class="pop-btn increase" onclick="adjustNodePop('${n.id}', 10)">+</button>
+                        </div>
+                        <div class="data-grid">
+                            <div class="data-item"><span class="data-label">Biomass</span><span class="data-val val-mass">${n.biomass.toLocaleString(undefined,{maximumFractionDigits:0})} kg</span></div>
+                            <div class="data-item"><span class="data-label">สารพิษ</span><span class="data-val" style="color:var(--danger)">${n.toxin.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+                            <div class="data-item"><span class="data-label">พลังงาน</span><span class="data-val val-energy">${n.energy.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
+                            <div class="data-item"><span class="data-label">สูญเสีย</span><span class="data-val val-heat">${n.heat.toLocaleString(undefined,{maximumFractionDigits:0})}</span></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                el.querySelector('.role').className = `role ${roleClass}`;
+                el.querySelector('.role').innerText = roleText;
+                el.querySelectorAll('.data-val')[0].innerText = `${n.biomass.toLocaleString(undefined,{maximumFractionDigits:0})} kg`;
+                el.querySelectorAll('.data-val')[1].innerText = `${n.toxin.toLocaleString(undefined,{maximumFractionDigits:2})}`;
+                el.querySelectorAll('.data-val')[2].innerText = `${n.energy.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+                el.querySelectorAll('.data-val')[3].innerText = `${n.heat.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+            }
+        });
+        drawConnections();
+    }
+
+    function drawConnections() {
+        svg.innerHTML = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="rgba(100,100,100,0.8)" /></marker></defs>';
+        activeNodes.forEach(target => {
+            activeNodes.forEach(source => {
+                if(target.eats.includes(source.refId) && source.pop > 0 && target.pop > 0) {
+                    const elS = document.getElementById(source.id); const elT = document.getElementById(target.id);
+                    if(!elS || !elT) return;
+                    const sX = elS.offsetLeft + elS.offsetWidth/2; const sY = elS.offsetTop + elS.offsetHeight/2;
+                    const tX = elT.offsetLeft + elT.offsetWidth/2; const tY = elT.offsetTop + elT.offsetHeight/2;
+                    const angle = Math.atan2(tY - sY, tX - sX); const endX = tX - Math.cos(angle) * 115; const endY = tY - Math.sin(angle) * 115;
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", sX); line.setAttribute("y1", sY); line.setAttribute("x2", endX); line.setAttribute("y2", endY); line.setAttribute("class", "link-line"); svg.appendChild(line);
+                    const flowLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    flowLine.setAttribute("x1", sX); flowLine.setAttribute("y1", sY); flowLine.setAttribute("x2", endX); flowLine.setAttribute("y2", endY); flowLine.setAttribute("class", "link-flow"); svg.appendChild(flowLine);
+                }
+            });
+        });
+    }
+
+    // --- สมการจำลองประชากรที่อิงหลักนิเวศวิทยา (Logistic Growth + Lotka-Volterra) ---
+    function simulateYear() {
+        if(activeNodes.length === 0) return;
+        currentYear++;
+        document.getElementById('time-display').innerText = `⏳ ปีที่: ${currentYear}`;
+        
+        activeNodes.forEach(n => {
+            // 1. คำนวณการเติบโตตามธรรมชาติ (อิงขีดจำกัดความจุ - Carrying Capacity)
+            let growthMultiplier = (1 - (n.pop / n.maxPop)); // ลดลงเมื่อประชากรใกล้จุดสูงสุด
+            let births = n.pop * n.birthRate * Math.max(0, growthMultiplier);
             
-            csv += `${n.name},${role},${levelsStr},${n.population},${n.energy.toFixed(2)},${n.heatLost.toFixed(2)},${n.toxin.toFixed(4)}\n`;
+            // 2. คำนวณการตายตามธรรมชาติ และ การอพยพ
+            let deaths = n.pop * n.deathRate;
+            let migration = n.pop * n.migRate * (Math.random() > 0.5 ? 1 : -0.5); 
+            
+            n.tempPop = n.pop + births - deaths + migration;
+        });
+
+        // 3. คำนวณการถูกล่า (Predation)
+        activeNodes.forEach(predator => {
+            if(predator.type === 'P' || predator.tempPop <= 0) return;
+            
+            let foodAcquired = false;
+            activeNodes.forEach(prey => {
+                if(predator.eats.includes(prey.refId) && prey.tempPop > 0) {
+                    foodAcquired = true;
+                    
+                    // ผู้ล่าและ Alien จะมีอัตราการล่าที่ไม่เท่ากัน
+                    let huntEfficiency = predator.type === 'A' ? 0.35 : 0.15; 
+                    
+                    // คำนวณจำนวนเหยื่อที่ถูกล่า (แปรผันตามจำนวนผู้ล่าที่มี)
+                    let eaten = Math.round(prey.tempPop * huntEfficiency * (predator.tempPop / (prey.maxPop * 0.1)));
+                    
+                    // ป้องกันการกินเหยื่อจนติดลบในเทิร์นเดียว (เว้นแต่จะโอเวอร์โหลดจริงๆ)
+                    eaten = Math.min(eaten, prey.tempPop * 0.95);
+                    eaten = Math.max(0, eaten);
+
+                    prey.tempPop -= eaten;
+                    
+                    // แปลงเหยื่อที่กินได้กลับมาเป็นประชากรผู้ล่า (พลังงานถ่ายทอดสู่ลูกหลาน)
+                    let energyConversion = (prey.weight / predator.weight) * 0.1;
+                    predator.tempPop += eaten * energyConversion;
+                }
+            });
+
+            // หากขาดแคลนอาหาร ผู้ล่าจะล้มตายอย่างรวดเร็ว
+            if(!foodAcquired) {
+                predator.tempPop -= predator.tempPop * 0.3; // อดตาย 30% ต่อปี
+            }
+        });
+
+        // 4. สรุปผลประชากร
+        activeNodes.forEach(n => {
+            n.pop = Math.max(0, Math.floor(n.tempPop)); // ห้ามติดลบ
+            n.pop = Math.min(n.pop, n.maxPop); // ห้ามเกินความจุ
+            n.history.push(n.pop);
+        });
+
+        recalculateEcosystem();
+        if(chartInstance) updateChart();
+    }
+
+    function showGraph() {
+        if(activeNodes.length === 0) return alert("กรุณาสร้างระบบนิเวศก่อนครับ");
+        document.getElementById('graph-modal').style.display = 'flex';
+        updateChart();
+    }
+
+    function updateChart() {
+        const ctx = document.getElementById('popChart').getContext('2d');
+        const labels = Array.from({length: currentYear + 1}, (_, i) => `ปีที่ ${i}`);
+        
+        const datasets = activeNodes.map(n => ({
+            label: `${n.icon} ${n.name}`, data: n.history,
+            borderColor: n.color, backgroundColor: n.color + '33',
+            tension: 0.3, fill: false, borderWidth: 2
+        }));
+
+        if(chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'line', data: { labels: labels, datasets: datasets },
+            options: { 
+                responsive: true, maintainAspectRatio: false, 
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'จำนวนประชากร' } } }, 
+                plugins: { legend: { position: 'right' } } 
+            }
+        });
+    }
+
+    function showPyramids() {
+        if(activeNodes.length === 0) return alert("กรุณาสร้างระบบนิเวศก่อนครับ");
+        document.getElementById('pyr-year').innerText = currentYear;
+        
+        let levels = {};
+        activeNodes.forEach(n => {
+            if(n.level > 0 && n.pop > 0) {
+                if(!levels[n.level]) levels[n.level] = { pop: 0, mass: 0, energy: 0 };
+                levels[n.level].pop += n.pop; levels[n.level].mass += n.biomass; levels[n.level].energy += n.energy;
+            }
+        });
+
+        const sortedLevels = Object.keys(levels).map(Number).sort((a,b)=>b-a);
+        const container = document.getElementById('pyramid-draw-area');
+        if(sortedLevels.length === 0) { container.innerHTML = "<p>ระบบนิเวศล่มสลาย</p>"; } 
+        else {
+            container.innerHTML = generatePyramidHTML('จำนวน (ตัว)', levels, sortedLevels, 'pop', '#4caf50') +
+                                  generatePyramidHTML('มวลชีวภาพ (kg)', levels, sortedLevels, 'mass', '#ff9800') +
+                                  generatePyramidHTML('พลังงาน (Joule)', levels, sortedLevels, 'energy', '#03a9f4');
+        }
+        document.getElementById('pyramid-modal').style.display = 'flex';
+    }
+
+    function generatePyramidHTML(title, dataObj, sortedKeys, dataKey, colorStr) {
+        let maxVal = Math.max(...Object.values(dataObj).map(d => d[dataKey]));
+        let html = `<div class="pyramid-box"><h3 style="margin-top:0;">${title}</h3>`;
+        sortedKeys.forEach(lvl => {
+            let val = dataObj[lvl][dataKey]; 
+            let width = Math.max(5, (val / maxVal) * 100);
+            let lvlName = lvl === 1 ? 'ผู้ผลิต' : `ผู้บริโภค T${lvl}`;
+            let displayVal = val.toLocaleString(undefined,{maximumFractionDigits:0});
+            
+            html += `
+            <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0;">
+                <div style="width: 45%; text-align: right; padding-right: 15px; font-size: 0.8em; font-weight: bold; color: #444; line-height: 1.2;">
+                    ${lvlName}<br><span style="font-weight:normal; font-size:0.9em; color:#777;">(${displayVal})</span>
+                </div>
+                <div style="width: 55%; display: flex; justify-content: center;">
+                    <div style="width: ${width}%; height: 26px; background: ${colorStr}; border-radius: 4px; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); transition: 0.3s;"></div>
+                </div>
+            </div>`;
+        });
+        html += `</div>`; return html;
+    }
+
+    function exportPDF() {
+        if(activeNodes.length === 0) return alert("กรุณาสร้างระบบนิเวศก่อนครับ");
+        const report = document.getElementById('report-area');
+        const statusText = document.getElementById('status-text').innerText;
+        
+        let levels = {};
+        activeNodes.forEach(n => {
+            if(n.level > 0 && n.pop > 0) {
+                if(!levels[n.level]) levels[n.level] = { pop: 0, mass: 0, energy: 0 };
+                levels[n.level].pop += n.pop; levels[n.level].mass += n.biomass; levels[n.level].energy += n.energy;
+            }
+        });
+        const sortedLevels = Object.keys(levels).map(Number).sort((a,b)=>b-a);
+        let pyrHtml = sortedLevels.length > 0 ? 
+            generatePyramidHTML('จำนวน', levels, sortedLevels, 'pop', '#4caf50') +
+            generatePyramidHTML('มวล', levels, sortedLevels, 'mass', '#ff9800') +
+            generatePyramidHTML('พลังงาน', levels, sortedLevels, 'energy', '#03a9f4') : 'ไม่มีข้อมูล';
+
+        // บังคับเรนเดอร์กราฟให้สมบูรณ์ก่อนดึงภาพ
+        if(!chartInstance) updateChart();
+        const chartBase64 = document.getElementById('popChart').toDataURL('image/png', 1.0);
+
+        let html = `
+            <div style="font-family: 'Prompt', sans-serif;">
+                <h1 style="color:#2b5876; text-align:center; margin-bottom:5px;">รายงานการเปลี่ยนแปลงของประชากรในระบบนิเวศ</h1>
+                <h3 style="text-align:center; color:#555; margin-top:0;">รายวิชาชีววิทยาเพิ่มเติม ม.6</h3>
+                <div style="display:flex; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:10px;">
+                    <p><strong>สถานะ:</strong> <span style="color:#ab47bc;">${statusText}</span></p>
+                    <p><strong>ระยะเวลาจำลอง:</strong> ${currentYear} ปี</p>
+                </div>
+                
+                <div class="report-section">
+                    <h2 style="color:#1565c0; border-left: 5px solid #1565c0; padding-left:10px;">1. ตารางวิเคราะห์ประชากร ณ ปีที่ ${currentYear}</h2>
+                    <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+                        <tr style="background:#2b5876; color:white; text-align:left;">
+                            <th style="padding:8px; border:1px solid #ddd;">สิ่งมีชีวิต</th>
+                            <th style="padding:8px; border:1px solid #ddd;">บทบาท</th>
+                            <th style="padding:8px; border:1px solid #ddd;">จำนวน</th>
+                            <th style="padding:8px; border:1px solid #ddd;">Biomass (kg)</th>
+                            <th style="padding:8px; border:1px solid #ddd;">พลังงาน (J)</th>
+                            <th style="padding:8px; border:1px solid #ddd;">สารพิษ (ppm)</th>
+                        </tr>
+        `;
+        let sorted = [...activeNodes].sort((a,b) => a.level - b.level);
+        sorted.forEach(n => {
+            html += `<tr>
+                <td style="padding:8px; border:1px solid #ddd;">${n.icon} ${n.name}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${n.pop===0?'สูญพันธุ์':(n.level===1?'ผู้ผลิต':`ผู้บริโภค T${n.level}`)}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${n.pop.toLocaleString()}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${n.biomass.toLocaleString()}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${n.energy.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+                <td style="padding:8px; border:1px solid #ddd; color:${n.toxin>0?'red':'black'};">${n.toxin.toLocaleString(undefined,{maximumFractionDigits:2})}</td>
+            </tr>`;
         });
         
-        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'ecoconnect_data.csv';
-        a.click();
-    }
-</script>
+        html += `</table></div>
+                <div class="report-section">
+                    <h2 style="color:#e65100; border-left: 5px solid #e65100; padding-left:10px;">2. กราฟการเปลี่ยนแปลงประชากร (Population Dynamics)</h2>
+                    <div style="text-align:center;">
+                        <img src="${chartBase64}" style="width:100%; max-width:800px; height:auto; border:1px solid #ddd; padding:10px; border-radius:8px; page-break-inside: avoid;">
+                    </div>
+                </div>
+                <div class="report-section">
+                    <h2 style="color:#2e7d32; border-left: 5px solid #2e7d32; padding-left:10px;">3. พีระมิดทางนิเวศวิทยา (Ecological Pyramids)</h2>
+                    <div style="display:flex; flex-direction:column; gap:10px;">${pyrHtml}</div>
+                </div>
+                <div style="margin-top: 30px; text-align:right; font-size: 0.9em; color:#555;">
+                    <p>ประมวลผลโดย <b>EcoConnect Interactive Simulator</b></p>
+                    <p>พัฒนาสื่อโดย ครูภควัต สองเมือง</p>
+                </div>
+            </div>`;
 
+        report.innerHTML = html; report.style.display = 'block';
+        const btn = document.querySelector('.btn-pdf'); const oldText = btn.innerHTML;
+        btn.innerHTML = '⏳ กำลังสร้าง...';
+        
+        html2pdf().set({
+            margin: 10, filename: 'EcoConnect_Dynamics_Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).from(report).save().then(() => { report.style.display = 'none'; btn.innerHTML = oldText; });
+    }
+
+    function resetBoard() {
+        if(!confirm("ต้องการล้างกระดานและรีเซ็ตเวลาใช่หรือไม่?")) return;
+        activeNodes.forEach(n => document.getElementById(n.id).remove());
+        activeNodes = []; currentYear = 0;
+        document.getElementById('time-display').innerText = `⏳ ปีที่: 0`;
+        if(chartInstance) chartInstance.destroy();
+        svg.innerHTML = ''; resetZoom(); recalculateEcosystem();
+    }
+
+    filterBiome('red_lotus');
+</script>
 </body>
 </html>
